@@ -1,0 +1,375 @@
+import test, { before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { spawn } from 'node:child_process';
+import { createServer } from 'node:net';
+import { randomBytes } from 'node:crypto';
+import { unlink } from 'node:fs/promises';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import bcrypt from 'bcrypt';
+import dotenv from 'dotenv';
+import pool, { query } from '../config/db.js';
+
+dotenv.config();
+
+const backendDirectory = fileURLToPath(new URL('../', import.meta.url));
+const adminEmail = `integration-${Date.now()}@example.test`;
+let adminPassword = randomBytes(24).toString('base64url');
+let serverProcess;
+let baseUrl;
+let token;
+const ids = { products: [], categories: [], brands: [], enquiries: [], gallery: [], banners: [], pages: [], settings: [] };
+const uploadedFiles = new Set();
+
+async function findPort() {
+  const server = createServer();
+  await new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(0, '127.0.0.1', resolve);
+  });
+  const { port } = server.address();
+  await new Promise((resolve) => server.close(resolve));
+  return port;
+}
+
+async function waitForHealth() {
+  for (let attempt = 0; attempt < 50; attempt += 1) {
+    try {
+      const response = await fetch(`${baseUrl}/api/health`);
+      if (response.ok) return;
+    } catch (error) {
+      await new Promise((resolve) => setTimeout(resolve, 200));
+    }
+  }
+  throw new Error('Backend server did not become ready.');
+}
+
+async function restartBackend() {
+  const previousServer = serverProcess;
+  const stopped = new Promise((resolve) => previousServer.once('exit', resolve));
+  previousServer.kill();
+  await stopped;
+  serverProcess = spawn(process.execPath, ['server.js'], {
+    cwd: backendDirectory,
+    env: { ...process.env, PORT: new URL(baseUrl).port, JWT_SECRET: process.env.JWT_SECRET },
+    stdio: 'ignore',
+  });
+  await waitForHealth();
+}
+
+async function request(path, { method = 'GET', body, form, auth = true } = {}) {
+  const headers = {};
+  if (auth && token) headers.Authorization = `Bearer ${token}`;
+  if (form) {
+    body = form;
+  } else if (body !== undefined) {
+    headers['Content-Type'] = 'application/json';
+    body = JSON.stringify(body);
+  }
+
+  const response = await fetch(`${baseUrl}${path}`, { method, headers, body });
+  const result = await response.json();
+  if (!response.ok) {
+    throw new Error(`${method} ${path} failed (${response.status}): ${result.message || response.statusText}`);
+  }
+  return result;
+}
+
+function imageForm(fields = {}, fieldName = 'image') {
+  const form = new FormData();
+  for (const [key, value] of Object.entries(fields)) form.append(key, String(value));
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/r9sAAAAASUVORK5CYII=', 'base64');
+  form.append(fieldName, new Blob([png], { type: 'image/png' }), 'pixel.png');
+  return form;
+}
+
+before(async () => {
+  await query('SELECT 1');
+  process.env.JWT_SECRET = randomBytes(48).toString('base64url');
+  const passwordHash = await bcrypt.hash(adminPassword, 12);
+  const result = await query(
+    `INSERT INTO admins (full_name, email, password_hash, role, is_active)
+     VALUES (?, ?, ?, 'super_admin', 1)`,
+    ['Integration Test Admin', adminEmail, passwordHash],
+  );
+  ids.admin = result.insertId;
+
+  const port = await findPort();
+  baseUrl = `http://127.0.0.1:${port}`;
+  serverProcess = spawn(process.execPath, ['server.js'], {
+    cwd: backendDirectory,
+    env: { ...process.env, PORT: String(port), JWT_SECRET: process.env.JWT_SECRET },
+    stdio: 'ignore',
+  });
+  await waitForHealth();
+});
+
+after(async () => {
+  if (serverProcess && !serverProcess.killed) {
+    const exited = new Promise((resolve) => serverProcess.once('exit', resolve));
+    serverProcess.kill();
+    await exited;
+  }
+  for (const id of ids.products) await query('DELETE FROM products WHERE id = ?', [id]);
+  for (const id of ids.categories) await query('DELETE FROM categories WHERE id = ?', [id]);
+  for (const id of ids.brands) await query('DELETE FROM brands WHERE id = ?', [id]);
+  for (const id of ids.enquiries) await query('DELETE FROM enquiries WHERE id = ?', [id]);
+  for (const id of ids.gallery) await query('DELETE FROM gallery WHERE id = ?', [id]);
+  for (const id of ids.banners) await query('DELETE FROM banners WHERE id = ?', [id]);
+  for (const id of ids.pages) await query('DELETE FROM pages WHERE id = ?', [id]);
+  for (const id of ids.settings) await query('DELETE FROM site_settings WHERE id = ?', [id]);
+  for (const file of uploadedFiles) {
+    const filename = path.basename(file);
+    await unlink(path.join(backendDirectory, 'uploads', filename)).catch(() => {});
+  }
+  if (ids.admin) {
+    await query('DELETE FROM admin_activity_logs WHERE admin_id = ?', [ids.admin]);
+    await query('DELETE FROM admins WHERE id = ?', [ids.admin]);
+  }
+  await pool.end();
+});
+
+test('public APIs, admin CRUD, enquiries, uploads, and auth work with MySQL', async () => {
+  const health = await request('/api/health', { auth: false });
+  assert.equal(health.success, true);
+  const unauthenticatedAdminList = await fetch(`${baseUrl}/api/products/admin/list`);
+  assert.equal(unauthenticatedAdminList.status, 401);
+  const publicRegistration = await fetch(`${baseUrl}/api/admin/register`, { method: 'POST' });
+  assert.equal(publicRegistration.status, 404);
+
+  const login = await request('/api/admin/login', {
+    method: 'POST',
+    auth: false,
+    body: { email: adminEmail, password: adminPassword },
+  });
+  token = login.token;
+  assert.ok(token);
+  assert.equal((await request('/api/admin/me')).admin.email, adminEmail);
+
+  for (const path of ['/api/products', '/api/products/', '/api/products/featured/list', '/api/categories', '/api/brands', '/api/gallery', '/api/pages/', '/api/settings', '/api/statistics']) {
+    const result = await request(path, { auth: false });
+    assert.equal(result.success, true, `${path} should be publicly available`);
+  }
+
+  const categoryForm = imageForm({ name: `Integration category ${Date.now()}`, subtitle: 'Test category', description: 'Category description', icon: 'sun' });
+  const categoryCreated = await request('/api/categories', { method: 'POST', form: categoryForm });
+  ids.categories.push(categoryCreated.id);
+  const category = await request(`/api/categories/${categoryCreated.id}`, { auth: false });
+  assert.equal(category.data.description, 'Category description');
+  assert.ok(category.data.image.startsWith('/uploads/'));
+  uploadedFiles.add(category.data.image);
+  const imageResponse = await fetch(`${baseUrl}${category.data.image}`);
+  assert.equal(imageResponse.status, 200);
+  await request(`/api/categories/${categoryCreated.id}`, { method: 'PUT', body: { subtitle: 'Updated test category' } });
+  assert.equal((await request('/api/categories/admin/list')).success, true);
+
+  const brandForm = imageForm({ name: `Integration brand ${Date.now()}`, category: 'Electricals', description: 'Brand description' }, 'logo');
+  const brandCreated = await request('/api/brands', { method: 'POST', form: brandForm });
+  ids.brands.push(brandCreated.id);
+  const generatedBrandNames = [brandForm.get('name')];
+  for (let index = 1; index < 30; index += 1) {
+    const name = `Integration batch brand ${Date.now()} ${index}`;
+    const result = await request('/api/brands', {
+      method: 'POST',
+      body: { name, category: 'Integration test', display_order: index },
+    });
+    ids.brands.push(result.id);
+    generatedBrandNames.push(name);
+  }
+  const adminBrands = await request('/api/brands/admin/list');
+  assert.equal(adminBrands.data.filter((entry) => generatedBrandNames.includes(entry.name)).length, 30);
+  assert.ok(adminBrands.data.find((entry) => entry.id === ids.brands[1]).display_order > 0);
+  const paginatedBrands = await request('/api/brands/admin/list?page=1&limit=10&search=Integration%20batch%20brand');
+  assert.equal(paginatedBrands.data.length, 10);
+  assert.equal(paginatedBrands.pagination.total, 29);
+  assert.equal(paginatedBrands.pagination.totalPages, 3);
+  await request(`/api/brands/${ids.brands[1]}`, { method: 'PUT', body: { display_order: 31, is_active: false } });
+  assert.equal((await request('/api/brands/admin/list')).data.find((entry) => entry.id === ids.brands[1]).display_order, 31);
+
+  const duplicateNameResponse = await fetch(`${baseUrl}/api/brands`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: generatedBrandNames[0], slug: `distinct-${Date.now()}` }),
+  });
+  assert.equal(duplicateNameResponse.status, 409);
+  const duplicateSlugResponse = await fetch(`${baseUrl}/api/brands`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ name: `Distinct integration name ${Date.now()}`, slug: adminBrands.data.find((entry) => entry.id === brandCreated.id).slug }),
+  });
+  assert.equal(duplicateSlugResponse.status, 409);
+
+  await request(`/api/brands/${ids.brands[1]}`, { method: 'PUT', body: { is_active: false } });
+  assert.equal((await request('/api/brands', { auth: false })).data.some((entry) => entry.id === ids.brands[1]), false);
+  await request(`/api/brands/${ids.brands[1]}`, { method: 'PUT', body: { is_active: true } });
+  assert.equal((await request('/api/brands', { auth: false })).data.some((entry) => entry.id === ids.brands[1]), true);
+  const disposableBrand = await request('/api/brands', { method: 'POST', body: { name: `Disposable integration brand ${Date.now()}` } });
+  ids.brands.push(disposableBrand.id);
+  await request(`/api/brands/${disposableBrand.id}`, { method: 'DELETE' });
+  const deletedBrandResponse = await fetch(`${baseUrl}/api/brands/${disposableBrand.id}`);
+  assert.equal(deletedBrandResponse.status, 404);
+
+  const brandsList = await request('/api/brands', { auth: false });
+  const brand = brandsList.data.find((entry) => entry.id === brandCreated.id);
+  assert.ok(brand.logo_url.startsWith('/uploads/'));
+  assert.equal(brand.description, 'Brand description');
+  uploadedFiles.add(brand.logo_url);
+  const originalLogoUrl = brand.logo_url;
+  const replacementLogoForm = imageForm({}, 'logo');
+  await request(`/api/brands/${brandCreated.id}`, { method: 'PUT', form: replacementLogoForm });
+  const updatedBrand = await request(`/api/brands/${brandCreated.id}`, { auth: false });
+  assert.notEqual(updatedBrand.data.logo_url, originalLogoUrl);
+  uploadedFiles.add(updatedBrand.data.logo_url);
+  assert.equal((await fetch(`${baseUrl}${updatedBrand.data.logo_url}`)).status, 200);
+  await restartBackend();
+  const persistedBrand = await request(`/api/brands/${brandCreated.id}`, { auth: false });
+  assert.equal(persistedBrand.data.logo_url, updatedBrand.data.logo_url);
+  assert.equal((await fetch(`${baseUrl}${persistedBrand.data.logo_url}`)).status, 200);
+  await request(`/api/brands/${brandCreated.id}`, { method: 'PUT', body: { remove_logo: true } });
+  assert.equal((await request(`/api/brands/${brandCreated.id}`, { auth: false })).data.logo_url, null);
+  await request(`/api/brands/${brandCreated.id}`, { method: 'PUT', body: { category: 'Updated electricals' } });
+  assert.equal((await request('/api/brands/admin/list')).success, true);
+
+  const productForm = imageForm({
+    name: `Integration product ${Date.now()}`,
+    category_id: categoryCreated.id,
+    brand_id: brandCreated.id,
+    slug: `integration-product-${Date.now()}`,
+    sku: `TEST-${Date.now()}`,
+    size: '9W / 12W',
+    badge: 'Lighting',
+    is_featured: 'true',
+    specifications: JSON.stringify([{ name: 'Wattage', value: '9W / 12W' }]),
+  }, 'images');
+  const productCreated = await request('/api/products', { method: 'POST', form: productForm });
+  ids.products.push(productCreated.productId);
+  const productsList = await request(`/api/products?search=12W&category=${encodeURIComponent(category.data.name)}&brand=${encodeURIComponent(brand.name)}`, { auth: false });
+  assert.equal(productsList.data.length, 1);
+  assert.equal(productsList.data[0].brand, brand.name);
+  assert.equal(productsList.data[0].category, category.data.name);
+  assert.ok(productsList.data[0].image.startsWith('/uploads/'));
+  uploadedFiles.add(productsList.data[0].image);
+  assert.equal((await fetch(`${baseUrl}${productsList.data[0].image}`)).status, 200);
+  assert.equal(productsList.data[0].specifications[0].value, '9W / 12W');
+  assert.equal((await request('/api/products/featured/list', { auth: false })).data[0].id, productCreated.productId);
+  assert.equal((await request('/api/products/admin/list')).data[0].id, productCreated.productId);
+  await request(`/api/products/${productCreated.productId}`, {
+    method: 'PUT',
+    body: { badge: 'Updated badge', is_active: true, is_featured: true, price_on_request: false },
+  });
+  const updatedProduct = (await request(`/api/products/${productCreated.productId}`, { auth: false })).data;
+  assert.equal(updatedProduct.badge, 'Updated badge');
+  assert.equal(updatedProduct.is_active, 1);
+  assert.equal(updatedProduct.is_featured, 1);
+  assert.equal(updatedProduct.price_on_request, 0);
+
+  const galleryCreated = await request('/api/gallery', { method: 'POST', form: imageForm({ title: 'Integration gallery image', category: 'Test' }) });
+  ids.gallery.push(galleryCreated.id);
+  const galleryItem = (await request('/api/gallery', { auth: false })).data.find((item) => item.id === galleryCreated.id);
+  uploadedFiles.add(galleryItem.image);
+  assert.equal((await fetch(`${baseUrl}${galleryItem.image}`)).status, 200);
+  assert.equal((await request('/api/gallery/admin/list')).success, true);
+  await request(`/api/gallery/${galleryCreated.id}`, { method: 'PUT', body: { title: 'Updated gallery image' } });
+  const invalidImageForm = new FormData();
+  invalidImageForm.append('title', 'Rejected file');
+  invalidImageForm.append('image', new Blob(['not an image'], { type: 'application/pdf' }), 'document.pdf');
+  const invalidImageResponse = await fetch(`${baseUrl}/api/gallery`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${token}` },
+    body: invalidImageForm,
+  });
+  assert.equal(invalidImageResponse.status, 400);
+  const spoofedImageForm = new FormData();
+  spoofedImageForm.append('title', 'Rejected spoofed image');
+  spoofedImageForm.append('image', new Blob(['not a png'], { type: 'image/png' }), 'spoofed.png');
+  await assert.rejects(
+    request('/api/gallery', { method: 'POST', form: spoofedImageForm }),
+    /\(400\)/,
+  );
+  await assert.rejects(
+    request('/api/banners', { method: 'POST', body: { title: 'Banner without image' } }),
+    /\(400\)/,
+  );
+  const bannerCreated = await request('/api/banners', { method: 'POST', form: imageForm({ title: 'Integration banner', category: 'LED Lights', button_text: 'Explore lighting' }) });
+  ids.banners.push(bannerCreated.id);
+  const banner = (await request('/api/banners')).data.find((item) => item.id === bannerCreated.id);
+  uploadedFiles.add(banner.image);
+  assert.equal(banner.button_text, 'Explore lighting');
+  assert.equal((await fetch(`${baseUrl}${banner.image}`)).status, 200);
+  assert.equal((await request('/api/banners/admin/list')).success, true);
+  await request(`/api/banners/${bannerCreated.id}`, { method: 'PUT', body: { title: 'Updated integration banner' } });
+
+  const pageCreated = await request('/api/pages', { method: 'POST', body: { title: 'Integration page', slug: `integration-page-${Date.now()}` } });
+  ids.pages.push(pageCreated.id);
+  assert.equal((await request('/api/pages/', { auth: false })).success, true);
+  await request(`/api/pages/${pageCreated.id}`, { method: 'PUT', body: { heading: 'Updated page heading' } });
+  assert.equal((await request('/api/pages/admin/list')).success, true);
+  const sectionCreated = await request(`/api/pages/${pageCreated.id}/sections`, {
+    method: 'POST',
+    body: { section_key: 'intro', title: 'Intro section', content: 'Test page content' },
+  });
+  assert.equal((await request(`/api/pages/${pageCreated.id}/sections`, { auth: false })).data[0].id, sectionCreated.id);
+  await request(`/api/pages/${pageCreated.id}/sections/${sectionCreated.id}`, { method: 'PUT', body: { title: 'Updated intro section' } });
+  await request(`/api/pages/${pageCreated.id}/sections/${sectionCreated.id}`, { method: 'DELETE' });
+
+  const settingKey = `integration_setting_${Date.now()}`;
+  const settingCreated = await request('/api/settings', { method: 'POST', body: { key_name: settingKey, key_value: 'Test value' } });
+  if (settingCreated.id) ids.settings.push(settingCreated.id);
+  assert.equal((await request('/api/settings/admin/list')).success, true);
+  await request(`/api/settings/${settingKey}`, { method: 'PUT', body: { key_value: 'Updated test value' } });
+  await request(`/api/settings/${settingKey}`, { method: 'DELETE' });
+  assert.equal((await request('/api/settings', { auth: false })).business.name, 'JAY GURUDEVV ELECTRIICALS');
+
+  const statisticCreated = await request('/api/statistics', {
+    method: 'POST',
+    body: { metric_key: `integration_${Date.now()}`, metric_value: '1+', label: 'Integration stat', display_order: 10 },
+  });
+  await request(`/api/statistics/${statisticCreated.id}`, { method: 'PUT', body: { metric_value: '2+' } });
+  assert.equal((await request('/api/statistics/admin/list')).success, true);
+  await request(`/api/statistics/${statisticCreated.id}`, { method: 'DELETE' });
+
+  const enquiryCreated = await request('/api/enquiries', {
+    method: 'POST',
+    auth: false,
+    body: { name: 'Test customer', shop: 'Test shop', city: 'Palanpur', phone: '+91 99999 12345', requirement: '20 switches', enquiry_type: 'wholesale' },
+  });
+  ids.enquiries.push(enquiryCreated.id);
+  const enquiry = await request(`/api/enquiries/${enquiryCreated.id}`);
+  assert.equal(enquiry.data.customer_name, 'Test customer');
+  await request(`/api/enquiries/${enquiryCreated.id}/status`, { method: 'PATCH', body: { status: 'contacted' } });
+  const dashboard = await request('/api/dashboard/summary');
+  assert.equal(dashboard.success, true);
+  assert.equal(typeof dashboard.data.galleryImages, 'number');
+  assert.ok(dashboard.data.recentEnquiries.some((item) => item.id === enquiryCreated.id));
+  assert.equal((await request('/api/admin/activity')).success, true);
+
+  await request(`/api/products/${productCreated.productId}`, { method: 'DELETE' });
+  ids.products = ids.products.filter((id) => id !== productCreated.productId);
+  await request(`/api/categories/${categoryCreated.id}`, { method: 'DELETE' });
+  ids.categories = ids.categories.filter((id) => id !== categoryCreated.id);
+  await request(`/api/brands/${brandCreated.id}`, { method: 'DELETE' });
+  ids.brands = ids.brands.filter((id) => id !== brandCreated.id);
+  await request(`/api/gallery/${galleryCreated.id}`, { method: 'DELETE' });
+  ids.gallery = ids.gallery.filter((id) => id !== galleryCreated.id);
+  await request(`/api/banners/${bannerCreated.id}`, { method: 'DELETE' });
+  ids.banners = ids.banners.filter((id) => id !== bannerCreated.id);
+  await request(`/api/pages/${pageCreated.id}`, { method: 'DELETE' });
+  ids.pages = ids.pages.filter((id) => id !== pageCreated.id);
+  await request(`/api/enquiries/${enquiryCreated.id}/status`, { method: 'PATCH', body: { status: 'closed' } });
+  await request(`/api/enquiries/${enquiryCreated.id}`, { method: 'DELETE' });
+  ids.enquiries = ids.enquiries.filter((id) => id !== enquiryCreated.id);
+  const deletedEnquiry = await fetch(`${baseUrl}/api/enquiries/${enquiryCreated.id}`, { headers: { Authorization: `Bearer ${token}` } });
+  assert.equal(deletedEnquiry.status, 404);
+
+  const newPassword = randomBytes(24).toString('base64url');
+  await request('/api/admin/change-password', { method: 'POST', body: { current_password: adminPassword, new_password: newPassword } });
+  const failedLogin = await fetch(`${baseUrl}/api/admin/login`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: adminEmail, password: adminPassword }),
+  });
+  assert.equal(failedLogin.status, 401);
+  adminPassword = newPassword;
+  const relogin = await request('/api/admin/login', { method: 'POST', auth: false, body: { email: adminEmail, password: adminPassword } });
+  token = relogin.token;
+});

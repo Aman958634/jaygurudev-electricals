@@ -1,0 +1,31 @@
+{
+  "name": "jaygurudev-backend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "backend:status": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/backend-process.ps1 -Action status",
+    "backend:stop": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/backend-process.ps1 -Action stop",
+    "init-db": "node database/init.js",
+    "seed-admin": "node database/seed-admin.js",
+    "seed-frontend-content": "node database/seed-frontend-content.js",
+    "lint": "node scripts/lint.js",
+    "test": "node --test",
+    "test:integration": "node --test tests/integration.test.js"
+  },
+  "dependencies": {
+    "bcrypt": "^6.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.4.1",
+    "express-validator": "^7.0.0",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "multer": "^2.0.2",
+    "mysql2": "^3.4.1"
+  }
+}
