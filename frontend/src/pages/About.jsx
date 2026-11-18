@@ -6,12 +6,18 @@ import { getWhatsAppUrl } from "../utils/whatsapp.js";
 import WhatsAppIcon from "../components/common/WhatsAppIcon.jsx";
 import { useLanguage } from "../context/LanguageContext.jsx";
 import { useSiteData } from "../context/SiteDataContext.jsx";
+import Seo from "../components/common/Seo.jsx";
 
 export default function About() {
   const { t } = useLanguage();
   const { business } = useSiteData();
   return (
     <>
+      <Seo
+        title="About Jay Guru Dev Electricals | Palanpur"
+        description="Learn about Jay Guru Dev Electricals, a local destination for electrical products, lighting and home appliances in Palanpur, Gujarat."
+        canonicalPath="/about"
+      />
       <PageHeading slug="about" fallback={{ eyebrow: "About our showroom", title: "Rooted in", highlight: "Palanpur", description: "A local destination for electrical essentials and home appliances." }} />
       <AboutSection full />
       <section className="section about-visit-section">

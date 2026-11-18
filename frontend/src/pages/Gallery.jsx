@@ -5,6 +5,7 @@ import PageHeading from "../components/common/PageHeading.jsx";
 import ResourceFeedback from "../components/common/ResourceFeedback.jsx";
 import { useSiteData } from "../context/SiteDataContext.jsx";
 import { resolveMediaUrl } from "../services/api.js";
+import Seo from "../components/common/Seo.jsx";
 
 export default function Gallery() {
   const [selected, setSelected] = useState(null);
@@ -12,6 +13,11 @@ export default function Gallery() {
   const { gallery, refresh } = useSiteData();
   return (
     <>
+      <Seo
+        title="Gallery | Jay Guru Dev Electricals"
+        description="Explore electrical products, lighting and interior inspiration from Jay Guru Dev Electricals in Palanpur, Gujarat."
+        canonicalPath="/gallery"
+      />
       <PageHeading slug="gallery" fallback={{ eyebrow: "A little inspiration", title: "Ideas for brighter", highlight: "spaces", description: "Explore lighting and interior inspiration. Visit the showroom to see our product selection in person." }} />
       <section className="section section-soft gallery-page-section">
         <div className="container gallery-grid">

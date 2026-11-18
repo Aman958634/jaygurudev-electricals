@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import {
   Boxes, Building2, ChevronDown, FolderKanban, Image, LayoutDashboard,
-  LogOut, Menu, MessageSquareText, Megaphone, Settings, ShieldCheck, Tags, X,
+  LogOut, Menu, MessageSquareText, Megaphone, PanelLeftClose, PanelLeftOpen,
+  Settings, ShieldCheck, Tags, X,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useSiteData } from "../context/SiteDataContext.jsx";
@@ -83,6 +84,7 @@ export default function AdminPanel() {
   const [token, setToken] = useState(() => window.localStorage.getItem("jgd-admin-token") || "");
   const [admin, setAdmin] = useState(null);
   const [activeSection, setActiveSection] = useState("dashboard");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [passwordOpen, setPasswordOpen] = useState(false);
@@ -159,17 +161,20 @@ export default function AdminPanel() {
   const onChanged = () => refresh();
 
   return (
-    <div className="admin-shell">
+    <div className={`admin-shell${sidebarCollapsed ? " admin-shell--collapsed" : ""}`}>
       {mobileNavOpen && <button className="admin-sidebar-scrim" aria-label="Close menu" onClick={() => setMobileNavOpen(false)} />}
-      <aside className={`admin-sidebar${mobileNavOpen ? " admin-sidebar--open" : ""}`}>
+      <aside id="admin-sidebar" className={`admin-sidebar${mobileNavOpen ? " admin-sidebar--open" : ""}`}>
         <div className="admin-brand-lockup"><img className="admin-brand-logo" src={logo} alt="Jay Gurudevv Electricals" /><span><strong>ADMIN CONSOLE</strong><small>WEBSITE MANAGEMENT</small></span><button className="admin-mobile-close" aria-label="Close menu" onClick={() => setMobileNavOpen(false)}><X size={19} /></button></div>
         <div className="admin-sidebar-label">WORKSPACE</div>
-        <nav className="admin-nav" aria-label="Admin sections">{navigation.map(({ id, label, icon: Icon }) => <button key={id} className={`admin-nav-item${activeSection === id ? " is-active" : ""}`} onClick={() => navigate(id)}><Icon size={18} /><span>{label}</span>{id === "dashboard" && <span className="admin-nav-indicator" />}</button>)}</nav>
+        <nav className="admin-nav" aria-label="Admin sections">{navigation.map(({ id, label, icon: Icon }) => <button key={id} title={label} aria-label={label} aria-current={activeSection === id ? "page" : undefined} className={`admin-nav-item${activeSection === id ? " is-active" : ""}`} onClick={() => navigate(id)}><Icon size={18} /><span>{label}</span>{id === "dashboard" && <span className="admin-nav-indicator" />}</button>)}</nav>
         <div className="admin-sidebar-bottom"><ShieldCheck size={17} /><span>Protected administrator area</span></div>
       </aside>
       <div className="admin-workspace">
         <header className="admin-topbar">
-          <button className="admin-mobile-menu" aria-label="Open menu" onClick={() => setMobileNavOpen(true)}><Menu size={21} /></button>
+          <button className="admin-mobile-menu" aria-label="Open menu" aria-controls="admin-sidebar" aria-expanded={mobileNavOpen} onClick={() => setMobileNavOpen(true)}><Menu size={21} /></button>
+          <button className="admin-collapse-toggle" aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} aria-controls="admin-sidebar" aria-pressed={sidebarCollapsed} title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"} onClick={() => setSidebarCollapsed((collapsed) => !collapsed)}>
+            {sidebarCollapsed ? <PanelLeftOpen size={19} /> : <PanelLeftClose size={19} />}
+          </button>
           <div className="admin-breadcrumb"><ActiveIcon size={17} /><span>{activeItem.label}</span></div>
           <div className="admin-account-wrap">
             <button className="admin-account-button" aria-label={`Account: ${admin.full_name || admin.email}`} onClick={() => setAccountMenuOpen((open) => !open)} aria-expanded={accountMenuOpen}><span className="admin-account-avatar">{(admin.full_name || admin.email || "A").slice(0, 1).toUpperCase()}</span><span className="admin-account-copy"><strong>{admin.full_name || "Administrator"}</strong><small>{admin.role?.replaceAll("_", " ")}</small></span><ChevronDown size={16} /></button>

@@ -69,6 +69,19 @@ npm run dev
 
 Open the public website at `http://localhost:5173` and the protected admin panel at `http://localhost:5173/admin`. Sign in with `ADMIN_EMAIL` and `ADMIN_PASSWORD` from the private backend `.env` after the initial `npm run seed-admin`. No admin credentials or JWT secrets are configured in the frontend.
 
+## Frontend production build and SEO
+
+Build the frontend with the public API reachable and `VITE_API_BASE_URL` set to that API's public base URL (or `http://localhost:5000/api` when building on the VPS beside the backend):
+
+```powershell
+Set-Location C:\Users\AMAN\Downloads\JayGuruDev\frontend
+npm run build
+```
+
+The build prerenders public route metadata and one crawler-readable HTML page for each active product returned by `GET /api/products`, including product-specific Open Graph/Twitter tags and Product JSON-LD. It also generates `dist/sitemap.xml`; `public/robots.txt` points crawlers to it. The build fails if the product API cannot be reached so a production deployment cannot silently omit product share pages. Set `PRERENDER_PRODUCTS_REQUIRED=false` only for an intentional frontend-only build without product metadata.
+
+Deploy the complete `frontend/dist` directory, including nested route folders such as `products/<id>/index.html`, so direct product URLs serve their prerendered HTML. Configure the web server to internally resolve an extensionless URL such as `/products/9` to that nested `index.html`; verify that the response contains the product title rather than the root SPA HTML. Vite preview's fallback does not do this for extensionless paths. The Hostinger virtual-host configuration is not in this repository and was not changed. The product URLs retain the existing numeric product IDs and do not require a database schema change.
+
 ## Validation
 
 ```powershell

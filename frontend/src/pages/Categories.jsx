@@ -5,6 +5,7 @@ import SectionTitle from "../components/common/SectionTitle.jsx";
 import { useLanguage } from "../context/LanguageContext.jsx";
 import { useSiteData } from "../context/SiteDataContext.jsx";
 import { resolveMediaUrl } from "../services/api.js";
+import Seo from "../components/common/Seo.jsx";
 
 export default function Categories() {
   const { t } = useLanguage();
@@ -12,6 +13,11 @@ export default function Categories() {
 
   return (
     <>
+      <Seo
+        title="Electrical Product Categories | Jay Guru Dev Electricals"
+        description="Explore electrical product categories at Jay Guru Dev Electricals and find products for your home or business."
+        canonicalPath="/categories"
+      />
       <section className="page-heading categories-heading">
         <div className="container">
           <SectionTitle
@@ -19,6 +25,7 @@ export default function Categories() {
             title={t("Shop by")}
             highlight={t("Category")}
             description={t("Explore our active product categories and find the right products for your needs.")}
+            headingLevel={1}
           />
         </div>
       </section>

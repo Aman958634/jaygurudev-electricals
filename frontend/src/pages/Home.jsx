@@ -9,10 +9,17 @@ import AboutSection from "../components/home/AboutSection.jsx";
 import Testimonials from "../components/home/Testimonials.jsx";
 import ContactSection from "../components/home/ContactSection.jsx";
 import GalleryPreview from "../components/home/GalleryPreview.jsx";
+import Seo from "../components/common/Seo.jsx";
 
 export default function Home() {
   return (
     <>
+      <Seo
+        title="Jay Guru Dev Electricals | Electrical Products & Solutions"
+        description="Explore quality electrical products, brands and electrical solutions at Jay Guru Dev Electricals."
+        canonicalPath="/"
+        imageAlt="Jay Guru Dev Electricals — electrical products and solutions in Palanpur, Gujarat"
+      />
       <Hero />
       <TrustBadges />
       <CategorySection />

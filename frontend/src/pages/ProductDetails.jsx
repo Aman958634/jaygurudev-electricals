@@ -7,6 +7,7 @@ import { useLanguage } from "../context/LanguageContext.jsx";
 import { useSiteData } from "../context/SiteDataContext.jsx";
 import { apiRequest, resolveMediaUrl } from "../services/api.js";
 import { getWhatsAppUrl } from "../utils/whatsapp.js";
+import Seo from "../components/common/Seo.jsx";
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -38,9 +39,35 @@ export default function ProductDetails() {
   const message = product
     ? `${t("Hello")} JAY GURUDEVV ELECTRIICALS, ${t("I would like to enquire about")} ${t(product.name)} by ${product.brand}${product.size ? ` (${t(product.size)})` : ""}.`
     : undefined;
+  const productDescription = product?.meta_description || product?.short_description || product?.description || `Enquire about ${product?.name || "this product"} at Jay Guru Dev Electricals.`;
+  const productSchema = product ? {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: productDescription,
+    sku: product.sku || undefined,
+    brand: product.brand ? { "@type": "Brand", name: product.brand } : undefined,
+    category: product.category || undefined,
+    offers: hasPrice ? {
+      "@type": "Offer",
+      priceCurrency: "INR",
+      price,
+      availability: product.stock_status === "out_of_stock" ? "https://schema.org/OutOfStock" : "https://schema.org/InStock",
+    } : undefined,
+  } : undefined;
 
   return (
     <>
+      <Seo
+        title={product?.meta_title || (product ? `${product.name} | Jay Guru Dev Electricals` : "Product | Jay Guru Dev Electricals")}
+        description={productDescription}
+        canonicalPath={`/products/${product?.id || id}`}
+        image={product?.image}
+        imageAlt={product?.name || "Jay Guru Dev Electricals product"}
+        type={product ? "product" : "website"}
+        schema={productSchema}
+        noindex={!product && !loading}
+      />
       <section className="page-heading product-detail-heading">
         <div className="container">
           <Link className="text-link product-detail-back" to="/products"><ArrowLeft size={16} /> {t("Back to products")}</Link>

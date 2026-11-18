@@ -5,12 +5,18 @@ import { useLanguage } from "../context/LanguageContext.jsx";
 import { useSiteData } from "../context/SiteDataContext.jsx";
 import ResourceFeedback from "../components/common/ResourceFeedback.jsx";
 import BrandLogo from "../components/common/BrandLogo.jsx";
+import Seo from "../components/common/Seo.jsx";
 
 export default function Brands() {
   const { t } = useLanguage();
   const { brands, refresh } = useSiteData();
   return (
     <>
+      <Seo
+        title="Electrical Brands | Jay Guru Dev Electricals"
+        description="Browse electrical, lighting and home appliance brands available at Jay Guru Dev Electricals in Palanpur."
+        canonicalPath="/brands"
+      />
       <PageHeading slug="brands" fallback={{ eyebrow: "Names you know", title: "Brands we", highlight: "offer", description: "Browse selected brands available across electricals, lighting and home appliances. Contact us to confirm current availability." }} />
       <section className="section section-soft brand-page">
         <div className="container brand-directory">

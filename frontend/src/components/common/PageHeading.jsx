@@ -16,6 +16,7 @@ export default function PageHeading({ slug, fallback }) {
           title={t(page?.title || fallback.title)}
           highlight={t(page?.heading || fallback.highlight)}
           description={t(page?.description || fallback.description)}
+          headingLevel={1}
         />
         {pages.error && <ResourceFeedback error={pages.error} onRetry={() => refresh("pages")} />}
       </div>
