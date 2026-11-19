@@ -10,7 +10,7 @@ export default function FeaturedProducts() {
     <section className="section section-soft catalog-products" id="catalog">
       <div className="container">
         <div className="section-heading-row">
-          <SectionTitle eyebrow="દુકાનમાં લોકપ્રિય પસંદગી" title="Best Selling" highlight="Products" />
+          <SectionTitle eyebrow="Popular Picks at Our Store" title="Best Selling" highlight="Products" />
           <Link className="text-link" to="/products">{t("Browse all products")} <ArrowRight size={17} /></Link>
         </div>
         <ProductGrid allProducts />

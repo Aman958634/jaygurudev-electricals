@@ -138,9 +138,9 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .hero-location span { color: #f1a05e; }
 .hero-location:hover { color: white; }
 .hero-visual { position: relative; min-height: 433px; align-self: stretch; margin: 10px 0; border-radius: 10px; background: linear-gradient(135deg,#253750,#6d6a64); box-shadow: 0 0 0 1px rgba(255,197,38,.2), 0 0 26px rgba(255,197,38,.17), 0 18px 36px rgba(0,0,0,.24); }
-.hero-showroom-image { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: inherit; object-fit: cover; filter: brightness(1.08) contrast(1.04) saturate(1.04); }
+.hero-showroom-image { position: absolute; z-index: 0; inset: 0; width: 100%; height: 100%; border-radius: inherit; object-fit: cover; object-position: 64% center; filter: brightness(1.08) contrast(1.04) saturate(1.04); }
 .hero-image-shade { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: inherit; }
-.hero-image-shade { background: linear-gradient(180deg,rgba(6,26,45,.02) 40%,rgba(6,26,45,.35) 100%), radial-gradient(ellipse at 68% 10%,rgba(255,197,38,.12),transparent 48%); }
+.hero-image-shade { z-index: 1; background: linear-gradient(180deg,rgba(6,26,45,.02) 40%,rgba(6,26,45,.35) 100%), radial-gradient(ellipse at 68% 10%,rgba(255,197,38,.12),transparent 48%); }
 .hero-pendants { position: absolute; z-index: 2; inset: 0; overflow: hidden; pointer-events: none; }
 .hero-pendant { --wire-height: 74px; --swing-duration: 3.6s; position: absolute; top: 0; display: flex; flex-direction: column; align-items: center; isolation: isolate; transform-origin: top center; filter: drop-shadow(0 0 10px rgba(255,195,91,.32)); animation: hero-pendant-swing var(--swing-duration) ease-in-out infinite both, hero-bulb-glow calc(var(--swing-duration) + .4s) ease-in-out infinite; }
 .hero-pendant--one { left: calc(14% - 11px); --wire-height: 58px; transform-origin: top center; animation: hero-hanging-bulb-swing 2.5s ease-in-out infinite, hero-bulb-glow 3.6s ease-in-out infinite; animation-delay: 0s, -.4s; }
@@ -152,7 +152,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .hero-pendant-bulb { position: relative; width: 22px; height: 30px; margin-top: -1px; border: 1px solid rgba(255,238,188,.72); border-radius: 48% 48% 50% 50% / 38% 38% 62% 62%; background: radial-gradient(ellipse at 48% 37%,rgba(255,255,234,.98) 0%,rgba(255,225,149,.95) 24%,rgba(255,177,62,.72) 58%,rgba(206,116,24,.24) 100%); box-shadow: inset 0 0 7px rgba(255,255,235,.78), 0 0 8px rgba(255,212,118,.72), 0 0 24px rgba(255,182,65,.4); }
 .hero-pendant-bulb::before { position: absolute; top: 8px; left: 9px; width: 3px; height: 8px; border-right: 1px solid rgba(255,250,216,.95); border-left: 1px solid rgba(255,250,216,.75); content: ""; filter: drop-shadow(0 0 2px #fff1bd); }
 .hero-pendant-bulb::after { position: absolute; top: -4px; left: 6px; width: 8px; height: 5px; border-radius: 1px 1px 0 0; background: linear-gradient(90deg,#57442b,#c09a58,#57442b); content: ""; }
-.hero-badge-pendant { position: absolute; z-index: 1; top: 0; left: 14%; display: flex; width: 0; flex-direction: column; align-items: center; }
+.hero-badge-pendant { position: absolute; z-index: 3; top: 0; left: 14%; display: flex; width: 0; flex-direction: column; align-items: center; }
 .hero-badge-wire { width: 1px; height: 54px; background: linear-gradient(90deg,rgba(51,39,19,.9),rgba(255,218,139,.86),rgba(77,57,23,.9)); box-shadow: 0 0 4px rgba(255,197,38,.38); }
 .hero-experience-badge { position: relative; display: grid; width: 110px; aspect-ratio: 1; place-items: center; border: 1px solid rgba(255,225,143,.64); border-radius: 50%; background: linear-gradient(145deg,rgba(6,26,45,.92),rgba(13,41,62,.82)); box-shadow: 0 8px 24px rgba(0,0,0,.32), 0 0 14px rgba(255,197,38,.17), inset 0 0 21px rgba(255,220,130,.08); color: #fff; backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); }
 .hero-experience-badge::before, .hero-experience-badge::after { position: absolute; border-radius: 50%; content: ""; pointer-events: none; }
@@ -252,14 +252,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .wholesale-banner > .button { flex: 0 0 auto; }
 
 .about-layout { display: grid; grid-template-columns: .92fr 1.08fr; align-items: center; gap: 76px; }
-.about-visual { position: relative; min-height: 420px; border-radius: 7px; background: linear-gradient(135deg,#d9d8d2,#a4aaa8); }
-.about-visual > img { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: inherit; object-fit: cover; }
+.about-visual { position: relative; min-height: 420px; border-radius: 7px; background: #fff; }
+.about-visual > img { position: relative; display: block; width: 100%; height: 100%; max-height: 520px; border-radius: inherit; object-fit: contain; object-position: center; }
 .about-image-note { position: absolute; top: 20px; left: 20px; display: flex; align-items: center; gap: 10px; padding: 12px; border: 1px solid rgba(255,255,255,.5); border-radius: 5px; background: rgba(255,255,255,.85); color: var(--navy); font-size: 11px; font-weight: 700; line-height: 1.4; backdrop-filter: blur(5px); }
 .about-image-note svg { color: var(--orange); }
-.about-location-card { position: absolute; right: -20px; bottom: 22px; display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-radius: 5px; background: #fff; box-shadow: 0 8px 25px rgba(20,30,45,.12); color: var(--orange-deep); }
-.about-location-card span { display: flex; flex-direction: column; gap: 4px; }
-.about-location-card strong { color: var(--navy); font-size: 12px; }
-.about-location-card small { color: var(--muted); font-size: 11px; }
 .about-copy .section-title { max-width: none; }
 .about-copy .section-title :is(h1, h2) { max-width: 550px; }
 .about-points { display: grid; gap: 13px; margin: 22px 0 25px; padding: 0; list-style: none; }
@@ -497,7 +493,6 @@ a.contact-card:hover { transform: translateY(-2px); border-color: #dfb28d; }
 .about-section { padding: 50px 0; }
 .about-layout { grid-template-columns: 1.05fr .95fr; gap: 35px; }
 .about-visual { min-height: 315px; border-radius: 10px; }
-.about-location-card { right: 12px; bottom: 12px; }
 .about-points { gap: 9px; margin: 16px 0; }
 .gallery-preview-section { padding: 18px 0 34px; }
 .gallery-preview-card { height: 160px; border-radius: 9px; }

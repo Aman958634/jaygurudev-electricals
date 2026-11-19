@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../services/api.js";
-import { BUSINESS as DEFAULT_BUSINESS } from "../utils/constants.js";
+import { BUSINESS as DEFAULT_BUSINESS, LEGACY_BUSINESS } from "../utils/constants.js";
+import { BUSINESS_NAME } from "../utils/branding.js";
 
 const resourcePaths = {
   categories: "/categories",
@@ -56,10 +57,18 @@ export function SiteDataProvider({ children }) {
     setReloadKey((value) => value + 1);
   }, []);
 
-  const business = useMemo(() => ({
-    ...DEFAULT_BUSINESS,
-    ...(resources.settings.data?.business || {}),
-  }), [resources.settings.data]);
+  const business = useMemo(() => {
+    const configured = resources.settings.data?.business || {};
+    return {
+      ...DEFAULT_BUSINESS,
+      ...configured,
+      name: BUSINESS_NAME,
+      address: !configured.address || configured.address === LEGACY_BUSINESS.address ? DEFAULT_BUSINESS.address : configured.address,
+      hours: !configured.hours || configured.hours === LEGACY_BUSINESS.hours ? DEFAULT_BUSINESS.hours : configured.hours,
+      mapsUrl: !configured.mapsUrl || configured.mapsUrl === LEGACY_BUSINESS.mapsUrl ? DEFAULT_BUSINESS.mapsUrl : configured.mapsUrl,
+      googleReviewVerified: String(configured.googleReviewVerified ?? DEFAULT_BUSINESS.googleReviewVerified).toLowerCase(),
+    };
+  }, [resources.settings.data]);
 
   const value = useMemo(() => ({
     categories: resources.categories,

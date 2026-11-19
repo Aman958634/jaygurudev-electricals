@@ -43,7 +43,7 @@ export default function Categories() {
               {categories.data.map((category) => (
                 <article className="categories-page-card" key={category.id || category.slug || category.name}>
                   {category.image ? (
-                    <img className="categories-page-image" src={resolveMediaUrl(category.image)} alt={t(category.name)} loading="lazy" />
+                    <img className="categories-page-image" src={resolveMediaUrl(category.image)} alt={t(category.name)} loading="lazy" onError={(event) => { event.currentTarget.hidden = true; }} />
                   ) : (
                     <div className="categories-page-image categories-page-image-empty" aria-hidden="true" />
                   )}

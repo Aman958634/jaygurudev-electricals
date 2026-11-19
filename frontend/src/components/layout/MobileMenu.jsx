@@ -2,7 +2,7 @@ import { NavLink } from "react-router-dom";
 import { CircleHelp, Grid3X3, Home, Images, Sparkles, UserRound } from "lucide-react";
 import { NAV_LINKS } from "../../utils/constants.js";
 import { useLanguage } from "../../context/LanguageContext.jsx";
-import logo from "../../assets/images/jay-gurudevv-logo.jpg";
+import logo from "../../assets/images/jay-gurudev-electricals-logo.png";
 
 const navIcons = {
   "/": Home,
@@ -20,7 +20,7 @@ export default function MobileMenu({ open, onClose }) {
   return (
     <nav className="mobile-menu" aria-label={t("Mobile navigation")}>
       <div className="mobile-menu-brand">
-        <img className="brand-logo" src={logo} alt="JAY GURUDEVV ELECTRIICALS" />
+        <img className="brand-logo" src={logo} alt="JAY GURUDEV ELECTRICALS" />
       </div>
       {NAV_LINKS.map((link) => {
         const Icon = navIcons[link.to];

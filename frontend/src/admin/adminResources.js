@@ -84,7 +84,7 @@ export const resourceConfigs = {
   },
   gallery: {
     title: "Gallery",
-    description: "Upload and curate the public showroom and project gallery.",
+    description: "Upload genuine showroom, workshop and project photos for the public gallery.",
     endpoint: "/gallery",
     listEndpoint: "/gallery/admin/list",
     uploadField: "image",

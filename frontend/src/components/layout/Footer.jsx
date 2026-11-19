@@ -4,7 +4,7 @@ import { NAV_LINKS } from "../../utils/constants.js";
 import { getWhatsAppUrl } from "../../utils/whatsapp.js";
 import WhatsAppIcon from "../common/WhatsAppIcon.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
-import logo from "../../assets/images/jay-gurudevv-logo.jpg";
+import logo from "../../assets/images/jay-gurudev-electricals-logo.png";
 import { useSiteData } from "../../context/SiteDataContext.jsx";
 import ResourceFeedback from "../common/ResourceFeedback.jsx";
 
@@ -28,8 +28,8 @@ export default function Footer() {
     <footer className="site-footer">
       <div className="container footer-grid">
         <div className="footer-brand">
-          <Link className="brand-lockup" to="/" aria-label={t("Jay Gurudevv Electricals home")}>
-            <img className="brand-logo" src={logo} alt="JAY GURUDEVV ELECTRIICALS" />
+          <Link className="brand-lockup" to="/" aria-label={t("Jay Gurudev Electricals home")}>
+            <img className="brand-logo" src={logo} alt="JAY GURUDEV ELECTRICALS" />
           </Link>
           <p>{t("Electrical essentials, lighting and home appliances for homes, shops and projects in Palanpur.")}</p>
         </div>

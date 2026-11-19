@@ -13,7 +13,7 @@ export default function BrandSection() {
     <section className="section brands-section" id="brands">
       <div className="container">
         <div className="section-heading-row">
-          <SectionTitle eyebrow="Trusted names" title="Top Brands" highlight="We Offer" />
+          <SectionTitle eyebrow="Brand directory" title="Our Trusted" highlight="Brands" />
           <Link className="text-link" to="/brands">{t("View All Brands")} <ArrowRight size={17} /></Link>
         </div>
         <div className="brand-grid">
@@ -21,7 +21,6 @@ export default function BrandSection() {
           {!brands.loading && !brands.error && brands.data.map((brand) => (
             <Link to={`/products?brand=${encodeURIComponent(brand.slug || brand.name)}`} className="brand-tile" key={brand.id || brand.slug || brand.name} title={brand.name}>
               <BrandLogo className="brand-tile-logo" brand={brand} />
-              <span>{t(brand.category)}</span>
             </Link>
           ))}
         </div>

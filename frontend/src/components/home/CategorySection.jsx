@@ -15,7 +15,7 @@ export default function CategorySection() {
     <section className="section section-soft category-section" id="categories">
       <div className="container">
         <div className="section-heading-row">
-          <SectionTitle eyebrow="તમારી જરૂરિયાત પ્રમાણે પસંદ કરો" title="Shop by" highlight="Category" />
+          <SectionTitle eyebrow="Find What You Need" title="Shop by" highlight="Category" />
           <Link className="text-link" to="/categories">{t("View All Categories")} <ArrowUpRight size={17} /></Link>
         </div>
         <div className="category-grid">

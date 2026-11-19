@@ -74,14 +74,42 @@ router.post('/', enquiryLimiter, (req, res, next) => {
       );
 
       enquiryId = result.insertId;
-      const items = Array.isArray(req.body.items) ? req.body.items : [];
+      const items = Array.isArray(req.body.items)
+        ? req.body.items.filter((item) => item && typeof item === 'object' && !Array.isArray(item))
+        : [];
+      const requestedProductIds = [...new Set(items
+        .map((item) => Number(item.product_id))
+        .filter((id) => Number.isSafeInteger(id) && id > 0))];
+      const existingProductIds = new Set();
+      if (requestedProductIds.length) {
+        const placeholders = requestedProductIds.map(() => '?').join(', ');
+        const [products] = await connection.execute(
+          `SELECT id FROM products WHERE id IN (${placeholders}) FOR UPDATE`,
+          requestedProductIds,
+        );
+        products.forEach((product) => existingProductIds.add(Number(product.id)));
+      }
+
       for (const item of items) {
+        const requestedProductId = Number(item.product_id);
+        const productId = Number.isSafeInteger(requestedProductId) && existingProductIds.has(requestedProductId)
+          ? requestedProductId
+          : null;
+        const productName = typeof item.product_name === 'string' || typeof item.product_name === 'number'
+          ? String(item.product_name).trim().slice(0, 180) || null
+          : null;
+        const quantity = typeof item.quantity === 'string' || typeof item.quantity === 'number'
+          ? String(item.quantity).trim().slice(0, 80) || null
+          : null;
+        const notes = typeof item.notes === 'string' || typeof item.notes === 'number'
+          ? String(item.notes).trim() || null
+          : null;
         await connection.execute('INSERT INTO enquiry_items (enquiry_id, product_id, product_name, quantity, notes) VALUES (?, ?, ?, ?, ?)', [
           enquiryId,
-          item.product_id || null,
-          item.product_name || null,
-          item.quantity || null,
-          item.notes || null,
+          productId,
+          productName,
+          quantity,
+          notes,
         ]);
       }
       await connection.commit();

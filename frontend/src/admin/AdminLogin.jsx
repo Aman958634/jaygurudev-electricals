@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Eye, EyeOff, KeyRound, LockKeyhole } from "lucide-react";
 import { adminRequest } from "./adminApi.js";
-import logo from "../assets/images/jay-gurudevv-logo.jpg";
+import logo from "../assets/images/jay-gurudev-electricals-logo.png";
 
 export default function AdminLogin({ onLogin, notice }) {
   const [busy, setBusy] = useState(false);
@@ -32,9 +32,9 @@ export default function AdminLogin({ onLogin, notice }) {
   return (
     <main className="admin-login-page">
       <form className="admin-login-card" onSubmit={submit}>
-        <img className="admin-login-logo" src={logo} alt="Jay Gurudevv Electricals" />
+        <img className="admin-login-logo" src={logo} alt="Jay Gurudev Electricals" />
         <div className="admin-login-mark"><LockKeyhole size={23} /></div>
-        <span className="admin-eyebrow">JAY GURUDEVV ELECTRICALS</span>
+        <span className="admin-eyebrow">JAY GURUDEV ELECTRICALS</span>
         <h1>Admin sign in</h1>
         <p>Sign in with your administrator account to manage the website.</p>
         {notice && <div className="admin-alert">{notice}</div>}

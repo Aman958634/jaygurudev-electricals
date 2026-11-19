@@ -37,12 +37,12 @@ const publicPages = [
   {
     path: "/brands",
     title: "Electrical Brands | Jay Guru Dev Electricals",
-    description: "Browse electrical, lighting and home appliance brands available at Jay Guru Dev Electricals in Palanpur.",
+    description: "Browse brand names and official websites. Contact Jay Guru Dev Electricals in Palanpur to confirm product availability.",
   },
   {
     path: "/gallery",
     title: "Gallery | Jay Guru Dev Electricals",
-    description: "Explore electrical products, lighting and interior inspiration from Jay Guru Dev Electricals in Palanpur, Gujarat.",
+    description: "Browse genuine showroom, workshop and project photos from Jay Guru Dev Electricals in Palanpur.",
   },
   {
     path: "/contact",

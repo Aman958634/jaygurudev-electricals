@@ -45,14 +45,7 @@ const products = [
   ['Smart Switch', 'smart-switch', 'JGE-SWITCH-002', 'Legrand', 'Electrical Accessories', 'Ask for available models', 'switches-sockets.webp', 'Smart home'],
 ];
 
-const gallery = [
-  ['Electricals showroom', 'Showroom', 'reference-showroom-hero.webp'],
-  ['Warm contemporary interiors', 'Interiors', 'lighting-interior.webp'],
-  ['A comfortable living space', 'Home', 'living-room.webp'],
-  ['Lighting that sets the mood', 'Lighting', 'led-lights.webp'],
-  ['Home appliances', 'Appliances', 'home-appliance.webp'],
-  ['Details for thoughtful spaces', 'Home', 'modern-interior.webp'],
-];
+const gallery = [];
 
 const banners = [
   ['Premium', 'Curated for your space', 'Lighting Solutions', 'Make your spaces brighter, smarter and more beautiful.', 'showroom-lighting.webp', 'LED Lights', 1],
@@ -60,11 +53,11 @@ const banners = [
 ];
 
 const pages = [
-  ['home', 'JAY GURUDEVV', 'ELECTRIICALS', 'Complete Electrical & Home Appliances under one roof — for your home, shop and project.'],
+  ['home', 'JAY GURUDEV', 'ELECTRICALS', 'Complete Electrical & Home Appliances under one roof — for your home, shop and project.'],
   ['about', 'Rooted in', 'Palanpur', 'A local destination for electrical essentials and home appliances.'],
   ['products', 'Find the right', 'products', 'Search our selection by product, brand or category. Ask us about variants, pricing and availability.'],
   ['brands', 'Brands we', 'offer', 'Browse selected brands available across electricals, lighting and home appliances. Contact us to confirm current availability.'],
-  ['gallery', 'Ideas for brighter', 'spaces', 'Explore lighting and interior inspiration. Visit the showroom to see our product selection in person.'],
+  ['gallery', 'Genuine showroom and workshop', 'project photos', 'Browse genuine photos uploaded by the team.'],
   ['contact', 'Get in', 'touch', 'Questions about a product? Contact our team or visit the showroom in Palanpur.'],
 ];
 

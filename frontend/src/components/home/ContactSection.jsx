@@ -33,7 +33,7 @@ export default function ContactSection() {
             <a className="button button-primary contact-whatsapp" href={getWhatsAppUrl(undefined, business)} target="_blank" rel="noreferrer"><WhatsAppIcon className="whatsapp-icon" /> {t("Message us on WhatsApp")} <ArrowUpRight size={17} /></a>
           </div>
           <div className="map-frame">
-            <iframe title={t("Map showing the area near Jay Gurudevv Electricals, Palanpur")} src={`https://maps.google.com/maps?q=${encodeURIComponent(business.address)}&output=embed`} loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+            <iframe title={t("Map showing the area near JAY GURUDEV ELECTRICALS, Palanpur")} src={`https://maps.google.com/maps?q=${encodeURIComponent(business.address)}&output=embed`} loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
             <a className="map-label" href={business.mapsUrl} target="_blank" rel="noreferrer"><MapPin size={17} /><span><strong>{business.name}</strong><small>{business.address}</small></span><ArrowUpRight size={17} /></a>
           </div>
         </div>

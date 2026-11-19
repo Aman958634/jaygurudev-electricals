@@ -22,7 +22,7 @@ export default function About() {
       <AboutSection full />
       <section className="section about-visit-section">
         <div className="container about-visit-card">
-          <div><span className="eyebrow">{t("Come say hello")}</span><h2>{t("Let's find what your space needs.")}</h2><p>{t(`Visit us at ${business.address}, or reach out before your visit.`)}</p></div>
+          <div><span className="eyebrow">{t("Come say hello")}</span><h2>{t("Let's find what your space needs.")}</h2><p>{t("Visit us at {address}, or contact us before your visit.", { address: business.address })}</p></div>
           <div className="about-visit-actions">
             <Link className="button button-outline" to="/contact">{t("Visit & contact details")} <ArrowRight size={17} /></Link>
             <a className="button button-primary" href={getWhatsAppUrl(undefined, business)} target="_blank" rel="noreferrer"><WhatsAppIcon className="whatsapp-icon" /> {t("Message us")}</a>

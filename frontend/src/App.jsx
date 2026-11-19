@@ -13,6 +13,7 @@ import Brands from "./pages/Brands.jsx";
 import Gallery from "./pages/Gallery.jsx";
 import Contact from "./pages/Contact.jsx";
 import WholesaleEnquiryForm from "./components/forms/WholesaleEnquiryForm.jsx";
+import WholesaleEnquiryList from "./components/forms/WholesaleEnquiryList.jsx";
 import AdminPanel from "./admin/AdminPanel.jsx";
 
 export default function App() {
@@ -46,6 +47,7 @@ function PublicSite() {
       <Footer />
       <WhatsAppButton />
       <WholesaleEnquiryForm />
+      <WholesaleEnquiryList />
     </>
   );
 }

@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { CircleHelp, Grid3X3, Home, Images, Menu, Search, Sparkles, UserRound, X } from "lucide-react";
+import { CircleHelp, ClipboardList, Grid3X3, Home, Images, Menu, Search, Sparkles, UserRound, X } from "lucide-react";
 import { NAV_LINKS } from "../../utils/constants.js";
 import MobileMenu from "./MobileMenu.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
-import logo from "../../assets/images/jay-gurudevv-logo.jpg";
+import { useEnquiry } from "../../context/EnquiryContext.jsx";
+import logo from "../../assets/images/jay-gurudev-electricals-logo.png";
 
 const navIcons = {
   "/": Home,
@@ -22,11 +23,12 @@ export default function Navbar() {
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const languageMenuRef = useRef(null);
   const { language, setLanguage, t } = useLanguage();
+  const { enquiryItems, openEnquiryList } = useEnquiry();
   const navigate = useNavigate();
   const languageOptions = [
     { code: "en", label: "English", shortLabel: "EN" },
     { code: "hi", label: "हिन्दी", shortLabel: "हि" },
-    { code: "gu", label: "ગુજરાતી", shortLabel: "ગુ" },
+    { code: "gu", label: "Gujarati", shortLabel: "GU" },
   ];
 
   useEffect(() => {
@@ -48,8 +50,8 @@ export default function Navbar() {
   return (
     <header className="site-header">
       <div className="container navbar">
-        <Link className="brand-lockup" to="/" aria-label={t("Jay Gurudevv Electricals home")}>
-          <img className="brand-logo" src={logo} alt="JAY GURUDEVV ELECTRIICALS" />
+        <Link className="brand-lockup" to="/" aria-label={t("Jay Gurudev Electricals home")}>
+          <img className="brand-logo" src={logo} alt="JAY GURUDEV ELECTRICALS" />
         </Link>
         <nav className="desktop-nav" aria-label={t("Main navigation")}>
           {NAV_LINKS.map((link) => {
@@ -74,6 +76,17 @@ export default function Navbar() {
             <button type="submit" aria-label={t("Submit product search")}><Search size={16} /></button>
           </form>
           <div className="navbar-actions">
+            <button
+              className="nav-enquiry-list"
+              type="button"
+              onClick={openEnquiryList}
+              aria-label={t("My Enquiry List ({count})", { count: enquiryItems.length })}
+              aria-haspopup="dialog"
+            >
+              <ClipboardList size={17} aria-hidden="true" />
+              <span className="nav-enquiry-list-label">{t("My Enquiry List")} ({enquiryItems.length})</span>
+              <span className="nav-enquiry-list-count" aria-hidden="true">{enquiryItems.length}</span>
+            </button>
             <div className="nav-language-picker" ref={languageMenuRef}>
               <button
                 className="nav-language"

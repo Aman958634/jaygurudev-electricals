@@ -5,16 +5,18 @@ import { requireAuth } from '../middleware/auth.js';
 import { logAdminActivity } from '../services/activityLog.js';
 
 const router = Router();
-
 router.get('/', async (req, res, next) => {
   try {
+    const publicKeys = [
+      'name', 'phone', 'phoneDigits', 'email', 'address', 'hours', 'mapsUrl',
+      'socialFacebook', 'socialInstagram', 'socialYouTube', 'socialWhatsApp',
+      'catalogueUrl', 'googleReviewUrl', 'googleRating', 'googleReviewCount', 'googleReviewVerified',
+    ];
     const rows = await query(
       `SELECT key_name, key_value, description FROM site_settings
-       WHERE key_name IN (
-         'name', 'phone', 'phoneDigits', 'email', 'address', 'hours', 'mapsUrl',
-         'socialFacebook', 'socialInstagram', 'socialYouTube', 'socialWhatsApp'
-       )
+       WHERE key_name IN (${publicKeys.map(() => '?').join(', ')})
        ORDER BY key_name ASC`,
+      publicKeys,
     );
     const settings = Object.fromEntries(rows.map(({ key_name, key_value }) => [key_name, key_value]));
     const business = {
@@ -29,6 +31,11 @@ router.get('/', async (req, res, next) => {
       socialInstagram: settings.socialInstagram ?? null,
       socialYouTube: settings.socialYouTube ?? null,
       socialWhatsApp: settings.socialWhatsApp ?? null,
+      catalogueUrl: settings.catalogueUrl ?? null,
+      googleReviewUrl: settings.googleReviewUrl ?? null,
+      googleRating: settings.googleRating ?? null,
+      googleReviewCount: settings.googleReviewCount ?? null,
+      googleReviewVerified: settings.googleReviewVerified ?? 'false',
     };
     return res.json({ success: true, data: rows, settings, business });
   } catch (error) {

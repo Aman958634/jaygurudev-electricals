@@ -72,8 +72,8 @@ export default function ProductGrid({ limit, featured = false, allProducts = fal
           onClear={clearFilters}
         />
       </div>
-      {!featured && <div className="catalog-result-count">{pagination?.total || 0} {t((pagination?.total || 0) === 1 ? "results.product" : "results.products")} {t("results.toExplore")}</div>}
-      <ResourceFeedback loading={false} error={error} empty={!products.length && !loading && !error} onRetry={refresh} emptyMessage={t("No matching products.")} />
+      {!featured && <div className="catalog-result-count">{t((pagination?.total || 0) === 1 ? "Product found" : "Products found", { count: pagination?.total || 0 })}</div>}
+      <ResourceFeedback loading={false} error={error} empty={!products.length && !loading && !error} onRetry={refresh} emptyMessage={t("No matching products")} />
       {loading && <div className="product-grid product-grid-skeleton" aria-label={t("Loading products")} role="status">{Array.from({ length: 8 }, (_, index) => <div className="product-skeleton-card" key={index}><span /><div><i /><i /><i /></div></div>)}</div>}
       {!loading && !error && products.length > 0 && (
         <>

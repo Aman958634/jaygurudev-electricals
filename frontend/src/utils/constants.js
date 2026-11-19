@@ -1,8 +1,21 @@
+import { BUSINESS_NAME } from "./branding.js";
+
 export const BUSINESS = {
-  name: "JAY GURUDEVV ELECTRIICALS",
+  name: BUSINESS_NAME,
   phone: "+91 99744 91814",
   phoneDigits: "919974491814",
   email: "jaygurudevelectricals@gmail.com",
+  address: "Gurutek House Lane, Opposite District Panchayat, Dhundhiyawadi, Palanpur – 385001, Gujarat, India",
+  hours: "Every day · 8:00 AM – 8:00 PM",
+  mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("Gurutek House Lane, Opposite District Panchayat, Dhundhiyawadi, Palanpur 385001, Gujarat, India")}`,
+  googleReviewVerified: "false",
+  googleRating: "",
+  googleReviewCount: "",
+  googleReviewUrl: "",
+  catalogueUrl: "",
+};
+
+export const LEGACY_BUSINESS = {
   address: "Opp. Jilla Panchayat, Palanpur, Gujarat",
   hours: "Mon – Sun · 9:00 AM – 9:00 PM",
   mapsUrl: "https://www.google.com/maps/search/?api=1&query=Opp.+Jilla+Panchayat%2C+Palanpur%2C+Gujarat",
