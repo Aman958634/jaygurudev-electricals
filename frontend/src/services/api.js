@@ -1,11 +1,15 @@
-export const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "http://localhost:5000/api").replace(/\/+$/, "");
-
-export const API_ORIGIN = new URL(API_BASE_URL).origin;
+export const API_BASE_URL = (
+  import.meta.env.VITE_API_BASE_URL
+  || (import.meta.env.DEV ? "http://localhost:5000/api" : "/api")
+).replace(/\/+$/, "");
 
 export function resolveMediaUrl(path) {
   if (!path) return "";
   if (/^(?:https?:)?\/\//i.test(path) || path.startsWith("data:")) return path;
-  return new URL(path.replace(/^\/+/, ""), `${API_ORIGIN}/`).href;
+  const apiOrigin = /^https?:\/\//i.test(API_BASE_URL)
+    ? new URL(API_BASE_URL).origin
+    : window.location.origin;
+  return new URL(path.replace(/^\/+/, ""), `${apiOrigin}/`).href;
 }
 
 export async function apiRequest(path, options = {}) {

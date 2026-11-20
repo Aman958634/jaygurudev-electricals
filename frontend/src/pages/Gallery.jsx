@@ -6,13 +6,13 @@ import ResourceFeedback from "../components/common/ResourceFeedback.jsx";
 import { useSiteData } from "../context/SiteDataContext.jsx";
 import { resolveMediaUrl } from "../services/api.js";
 import Seo from "../components/common/Seo.jsx";
-import { isGenuineGalleryPhoto } from "../utils/galleryImages.js";
+import { hasGalleryImage } from "../utils/galleryImages.js";
 
 export default function Gallery() {
   const [selected, setSelected] = useState(null);
   const { t } = useLanguage();
   const { gallery, refresh } = useSiteData();
-  const photos = gallery.data.filter(isGenuineGalleryPhoto);
+  const photos = gallery.data.filter(hasGalleryImage);
   return (
     <>
       <Seo

@@ -273,10 +273,10 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .about-visit-actions { display: flex; flex-wrap: wrap; gap: 10px; }
 
 .gallery-preview-section { padding-top: 80px; padding-bottom: 84px; }
-.gallery-preview-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
-.gallery-preview-card { position: relative; height: 250px; overflow: hidden; border-radius: 6px; background: #d9dadb; }
+.gallery-preview-grid { display: grid; grid-template-columns: repeat(4,minmax(0,1fr)); gap: 16px; }
+.gallery-preview-card { position: relative; display: block; min-width: 0; aspect-ratio: 4 / 3; overflow: hidden; border-radius: 6px; background: #d9dadb; }
 .gallery-preview-card::after { position: absolute; inset: 30% 0 0; background: linear-gradient(transparent,rgba(10,17,28,.7)); content: ""; }
-.gallery-preview-card img { width: 100%; height: 100%; object-fit: cover; transition: transform .4s ease; }
+.gallery-preview-card img { width: 100%; height: 100%; object-fit: cover; object-position: center; transition: transform .4s ease; }
 .gallery-preview-card:hover img { transform: scale(1.04); }
 .gallery-preview-card span { position: absolute; z-index: 1; bottom: 17px; left: 17px; color: #fff; font-size: 13px; font-weight: 700; }
 
@@ -495,7 +495,7 @@ a.contact-card:hover { transform: translateY(-2px); border-color: #dfb28d; }
 .about-visual { min-height: 315px; border-radius: 10px; }
 .about-points { gap: 9px; margin: 16px 0; }
 .gallery-preview-section { padding: 18px 0 34px; }
-.gallery-preview-card { height: 160px; border-radius: 9px; }
+.gallery-preview-card { height: auto; border-radius: 9px; }
 .testimonials-section { padding: 0 0 36px; }
 .feedback-card { padding: 20px; }
 .contact-section { padding: 40px 0; background: var(--navy); color: #fff; }
