@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../services/api.js";
-import { BUSINESS as DEFAULT_BUSINESS, LEGACY_BUSINESS } from "../utils/constants.js";
+import { BUSINESS as DEFAULT_BUSINESS, LEGACY_BUSINESS, normalizeBusinessHours } from "../utils/constants.js";
 import { BUSINESS_NAME } from "../utils/branding.js";
 
 const resourcePaths = {
@@ -64,7 +64,7 @@ export function SiteDataProvider({ children }) {
       ...configured,
       name: BUSINESS_NAME,
       address: !configured.address || configured.address === LEGACY_BUSINESS.address ? DEFAULT_BUSINESS.address : configured.address,
-      hours: !configured.hours || configured.hours === LEGACY_BUSINESS.hours ? DEFAULT_BUSINESS.hours : configured.hours,
+      hours: normalizeBusinessHours(configured.hours),
       mapsUrl: !configured.mapsUrl || configured.mapsUrl === LEGACY_BUSINESS.mapsUrl ? DEFAULT_BUSINESS.mapsUrl : configured.mapsUrl,
       googleReviewVerified: String(configured.googleReviewVerified ?? DEFAULT_BUSINESS.googleReviewVerified).toLowerCase(),
     };

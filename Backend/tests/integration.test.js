@@ -318,7 +318,9 @@ test('public APIs, admin CRUD, enquiries, uploads, and auth work with MySQL', as
   assert.equal((await request('/api/settings/admin/list')).success, true);
   await request(`/api/settings/${settingKey}`, { method: 'PUT', body: { key_value: 'Updated test value' } });
   await request(`/api/settings/${settingKey}`, { method: 'DELETE' });
-  assert.equal((await request('/api/settings', { auth: false })).business.name, 'JAY GURUDEVV ELECTRIICALS');
+  const publicSettings = await request('/api/settings', { auth: false });
+  assert.equal(publicSettings.business.name, 'JAY GURUDEV ELECTRIICALS');
+  assert.equal(publicSettings.business.hours, 'Monday – Saturday · 8:00 AM – 8:00 PM · Sunday: CLOSED');
 
   const statisticCreated = await request('/api/statistics', {
     method: 'POST',

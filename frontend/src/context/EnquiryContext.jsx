@@ -91,6 +91,7 @@ function toEnquiryItem(product, variant, variantOptions, quantity = 1) {
 
 export function EnquiryProvider({ children }) {
   const [wholesaleOpen, setWholesaleOpen] = useState(false);
+  const [dealerQuotationOpen, setDealerQuotationOpen] = useState(false);
   const [enquiryListOpen, setEnquiryListOpen] = useState(false);
   const [enquiryItems, setEnquiryItems] = useState(readSavedItems);
 
@@ -177,10 +178,18 @@ export function EnquiryProvider({ children }) {
   const value = useMemo(() => ({
     wholesaleOpen,
     openWholesale: () => {
+      setDealerQuotationOpen(false);
       setEnquiryListOpen(false);
       setWholesaleOpen(true);
     },
     closeWholesale: () => setWholesaleOpen(false),
+    dealerQuotationOpen,
+    openDealerQuotation: () => {
+      setWholesaleOpen(false);
+      setEnquiryListOpen(false);
+      setDealerQuotationOpen(true);
+    },
+    closeDealerQuotation: () => setDealerQuotationOpen(false),
     enquiryItems,
     addEnquiryItem,
     updateEnquiryItem,
@@ -189,10 +198,11 @@ export function EnquiryProvider({ children }) {
     enquiryListOpen,
     openEnquiryList: () => {
       setWholesaleOpen(false);
+      setDealerQuotationOpen(false);
       setEnquiryListOpen(true);
     },
     closeEnquiryList: () => setEnquiryListOpen(false),
-  }), [wholesaleOpen, enquiryItems, enquiryListOpen]);
+  }), [wholesaleOpen, dealerQuotationOpen, enquiryItems, enquiryListOpen]);
 
   return <EnquiryContext.Provider value={value}>{children}</EnquiryContext.Provider>;
 }

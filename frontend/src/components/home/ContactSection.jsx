@@ -28,12 +28,12 @@ export default function ContactSection() {
               <span className="contact-icon"><Mail size={20} /></span><span><small>{t("Email")}</small><strong>{business.email}</strong><em>{t("Send us an email")} <ArrowUpRight size={14} /></em></span>
             </a>
             <div className="contact-card contact-hours">
-              <span className="contact-icon"><Clock3 size={20} /></span><span><small>{t("Opening hours")}</small><strong>{business.hours}</strong><em>{t("We look forward to seeing you")}</em></span>
+              <span className="contact-icon"><Clock3 size={20} /></span><span><small>{t("Opening hours")}</small><strong>{t(business.hours)}</strong><em>{t("We look forward to seeing you")}</em></span>
             </div>
             <a className="button button-primary contact-whatsapp" href={getWhatsAppUrl(undefined, business)} target="_blank" rel="noreferrer"><WhatsAppIcon className="whatsapp-icon" /> {t("Message us on WhatsApp")} <ArrowUpRight size={17} /></a>
           </div>
           <div className="map-frame">
-            <iframe title={t("Map showing the area near JAY GURUDEV ELECTRICALS, Palanpur")} src={`https://maps.google.com/maps?q=${encodeURIComponent(business.address)}&output=embed`} loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
+            <iframe title={t("Map showing the area near JAY GURUDEV ELECTRIICALS, Palanpur")} src={`https://maps.google.com/maps?q=${encodeURIComponent(business.address)}&output=embed`} loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
             <a className="map-label" href={business.mapsUrl} target="_blank" rel="noreferrer"><MapPin size={17} /><span><strong>{business.name}</strong><small>{business.address}</small></span><ArrowUpRight size={17} /></a>
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
+import { BUSINESS_NAME, normalizeBusinessCopy } from "../../utils/branding.js";
 
 const SITE_URL = "https://jaygurudevelectricals.com";
 const SOCIAL_IMAGE_URL = `${SITE_URL}/social-preview.png`;
@@ -43,8 +44,9 @@ export default function Seo({
   useEffect(() => {
     const canonicalUrl = new URL(canonicalPath || location.pathname, `${SITE_URL}/`).href;
     const imageUrl = getPublicImageUrl(image);
-    const pageTitle = title || "Jay Guru Dev Electricals | Electrical Products & Solutions";
-    const pageDescription = description || "Explore quality electrical products, brands and electrical solutions at Jay Guru Dev Electricals.";
+    const pageTitle = normalizeBusinessCopy(title || `${BUSINESS_NAME} | Electrical Products & Solutions`);
+    const pageDescription = normalizeBusinessCopy(description || `Explore quality electrical products, brands and electrical solutions at ${BUSINESS_NAME}.`);
+    const pageImageAlt = normalizeBusinessCopy(imageAlt || pageTitle);
 
     document.title = pageTitle;
     setMeta("name", "description", pageDescription);
@@ -52,10 +54,10 @@ export default function Seo({
     setMeta("property", "og:title", pageTitle);
     setMeta("property", "og:description", pageDescription);
     setMeta("property", "og:image", imageUrl);
-    setMeta("property", "og:image:alt", imageAlt || pageTitle);
+    setMeta("property", "og:image:alt", pageImageAlt);
     setMeta("property", "og:url", canonicalUrl);
     setMeta("property", "og:type", type);
-    setMeta("property", "og:site_name", "Jay Guru Dev Electricals");
+    setMeta("property", "og:site_name", BUSINESS_NAME);
     setMeta("name", "twitter:card", "summary_large_image");
     setMeta("name", "twitter:title", pageTitle);
     setMeta("name", "twitter:description", pageDescription);

@@ -53,7 +53,7 @@ const banners = [
 ];
 
 const pages = [
-  ['home', 'JAY GURUDEV', 'ELECTRICALS', 'Complete Electrical & Home Appliances under one roof — for your home, shop and project.'],
+  ['home', 'JAY GURUDEV', 'ELECTRIICALS', 'Complete Electrical & Home Appliances under one roof — for your home, shop and project.'],
   ['about', 'Rooted in', 'Palanpur', 'A local destination for electrical essentials and home appliances.'],
   ['products', 'Find the right', 'products', 'Search our selection by product, brand or category. Ask us about variants, pricing and availability.'],
   ['brands', 'Brands we', 'offer', 'Browse selected brands available across electricals, lighting and home appliances. Contact us to confirm current availability.'],

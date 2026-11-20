@@ -1,4 +1,4 @@
-# Jay Gurudevv Electricals Backend
+# Jay Gurudev Electricals Backend
 
 Node.js + Express ES-module API backed by MySQL (`mysql2/promise`), integrated with the existing React/Vite public site and its separate `/admin` content-management console.
 

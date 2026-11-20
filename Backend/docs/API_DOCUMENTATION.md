@@ -1,4 +1,4 @@
-# Jay Gurudevv Electricals Backend API
+# Jay Gurudev Electricals Backend API
 
 Base URL: `http://localhost:5000/api`
 
@@ -106,12 +106,12 @@ Example:
 {
   "success": true,
   "business": {
-    "name": "JAY GURUDEVV ELECTRIICALS",
+    "name": "JAY GURUDEV ELECTRIICALS",
     "phone": "+91 99744 91814",
     "phoneDigits": "919974491814",
     "email": "jaygurudevelectricals@gmail.com",
     "address": "Opp. Jilla Panchayat, Palanpur, Gujarat",
-    "hours": "Mon – Sun · 9:00 AM – 9:00 PM",
+    "hours": "Monday – Saturday · 8:00 AM – 8:00 PM · Sunday: CLOSED",
     "mapsUrl": "https://www.google.com/maps/search/?api=1&query=Opp.+Jilla+Panchayat%2C+Palanpur%2C+Gujarat",
     "socialFacebook": null,
     "socialInstagram": null,
@@ -119,16 +119,16 @@ Example:
     "socialWhatsApp": null
   },
   "settings": {
-    "name": "JAY GURUDEVV ELECTRIICALS",
+    "name": "JAY GURUDEV ELECTRIICALS",
     "phone": "+91 99744 91814",
     "phoneDigits": "919974491814",
     "email": "jaygurudevelectricals@gmail.com",
     "address": "Opp. Jilla Panchayat, Palanpur, Gujarat",
-    "hours": "Mon – Sun · 9:00 AM – 9:00 PM",
+    "hours": "Monday – Saturday · 8:00 AM – 8:00 PM · Sunday: CLOSED",
     "mapsUrl": "https://www.google.com/maps/search/?api=1&query=Opp.+Jilla+Panchayat%2C+Palanpur%2C+Gujarat"
   },
   "data": [
-    { "key_name": "name", "key_value": "JAY GURUDEVV ELECTRIICALS", "description": "Business display name" }
+    { "key_name": "name", "key_value": "JAY GURUDEV ELECTRIICALS", "description": "Business display name" }
   ]
 }
 ```

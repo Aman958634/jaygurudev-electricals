@@ -15,10 +15,10 @@ export default function Home() {
   return (
     <>
       <Seo
-        title="Jay Guru Dev Electricals | Electrical Products & Solutions"
-        description="Explore quality electrical products, brands and electrical solutions at Jay Guru Dev Electricals."
+        title="JAY GURUDEV ELECTRIICALS | Electrical Products & Solutions"
+        description="Explore quality electrical products, brands and electrical solutions at JAY GURUDEV ELECTRIICALS."
         canonicalPath="/"
-        imageAlt="Jay Guru Dev Electricals — electrical products and solutions in Palanpur, Gujarat"
+        imageAlt="JAY GURUDEV ELECTRIICALS — electrical products and solutions in Palanpur, Gujarat"
       />
       <Hero />
       <TrustBadges />

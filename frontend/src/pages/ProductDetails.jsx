@@ -8,8 +8,10 @@ import { useSiteData } from "../context/SiteDataContext.jsx";
 import { apiRequest, resolveMediaUrl } from "../services/api.js";
 import { getWhatsAppUrl } from "../utils/whatsapp.js";
 import Seo from "../components/common/Seo.jsx";
+import { BUSINESS_NAME, normalizeBusinessCopy } from "../utils/branding.js";
 import { useEnquiry } from "../context/EnquiryContext.jsx";
-import { getPoleConfigurations, getProductImagePaths } from "../utils/productPresentation.js";
+import { getPoleConfigurations, getProductDetailSpecifications, getProductImagePaths } from "../utils/productPresentation.js";
+import ProductCard from "../components/products/ProductCard.jsx";
 
 export default function ProductDetails() {
   const { id } = useParams();
@@ -23,6 +25,9 @@ export default function ProductDetails() {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [imageFailed, setImageFailed] = useState(false);
   const [selectedPole, setSelectedPole] = useState("");
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [relatedError, setRelatedError] = useState("");
+  const [relatedRetry, setRelatedRetry] = useState(0);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -32,7 +37,7 @@ export default function ProductDetails() {
     setSelectedImageIndex(0);
     setImageFailed(false);
     setSelectedPole("");
-    apiRequest(`/products/${encodeURIComponent(id)}`, { signal: controller.signal })
+    apiRequest(`/products/${encodeURIComponent(id)}`, { signal: controller.signal, cache: "no-store" })
       .then((response) => {
         setProduct(response.data);
         const poleOptions = getPoleConfigurations(response.data);
@@ -47,6 +52,37 @@ export default function ProductDetails() {
     return () => controller.abort();
   }, [id, retryKey]);
 
+  useEffect(() => {
+    if (!product) {
+      setRelatedProducts([]);
+      setRelatedError("");
+      return undefined;
+    }
+
+    const filterName = product.category_slug ? "category" : product.brand_slug ? "brand" : "";
+    const filterValue = product.category_slug || product.brand_slug;
+    if (!filterName || !filterValue) {
+      setRelatedProducts([]);
+      setRelatedError("");
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    const params = new URLSearchParams({ [filterName]: filterValue, limit: "8", sort: "newest" });
+    setRelatedError("");
+    apiRequest(`/products?${params}`, { signal: controller.signal, cache: "no-store" })
+      .then((response) => {
+        setRelatedProducts((response.data || [])
+          .filter((item) => String(item.id) !== String(product.id))
+          .slice(0, 4));
+      })
+      .catch((requestError) => {
+        if (requestError.name !== "AbortError") setRelatedError(requestError.message);
+      });
+
+    return () => controller.abort();
+  }, [product, relatedRetry]);
+
   const poleConfigurations = getPoleConfigurations(product);
   const imagePaths = getProductImagePaths(product);
   const selectedImage = imagePaths[selectedImageIndex] || product?.image;
@@ -57,7 +93,8 @@ export default function ProductDetails() {
   const message = product
     ? `${t("Hello")} ${business.name}, ${t("I would like to enquire about")} ${t(product.name)}${product.brand ? ` by ${product.brand}` : ""}${selectedPole ? ` (${t("Pole configuration")}: ${selectedPole})` : product.size && !poleConfigurations.length ? ` (${t(product.size)})` : ""}.`
     : undefined;
-  const productDescription = product?.meta_description || product?.short_description || product?.description || `Enquire about ${product?.name || "this product"} at Jay Guru Dev Electricals.`;
+  const productDescription = normalizeBusinessCopy(product?.meta_description || product?.short_description || product?.description || `Enquire about ${product?.name || "this product"} at ${BUSINESS_NAME}.`);
+  const productTitle = normalizeBusinessCopy(product?.meta_title || (product ? `${product.name} | ${BUSINESS_NAME}` : `Product | ${BUSINESS_NAME}`));
   const stockAvailability = product?.stock_status === "out_of_stock"
     ? "https://schema.org/OutOfStock"
     : product?.stock_status === "in_stock" ? "https://schema.org/InStock" : undefined;
@@ -77,7 +114,7 @@ export default function ProductDetails() {
       availability: stockAvailability,
     } : undefined,
   } : undefined;
-  const specificationRows = product ? getSpecificationRows(product, t, poleConfigurations) : [];
+  const specificationRows = getProductDetailSpecifications(product);
   const alreadyAdded = enquiryItems.some((item) => (
     String(item.productId) === String(product?.id) && item.variant === selectedPole
   ));
@@ -85,11 +122,11 @@ export default function ProductDetails() {
   return (
     <>
       <Seo
-        title={product?.meta_title || (product ? `${product.name} | Jay Guru Dev Electricals` : "Product | Jay Guru Dev Electricals")}
+        title={productTitle}
         description={productDescription}
         canonicalPath={`/products/${product?.id || id}`}
         image={product?.image}
-        imageAlt={product?.name || "Jay Guru Dev Electricals product"}
+        imageAlt={product?.name ? normalizeBusinessCopy(product.name) : `${BUSINESS_NAME} product`}
         type={product ? "product" : "website"}
         schema={productSchema}
         noindex={!product && !loading}
@@ -128,7 +165,6 @@ export default function ProductDetails() {
                 <h2>{t(product.name)}</h2>
                 {product.category && <p className="product-detail-category">{t(product.category)}</p>}
                 {(product.short_description || product.description) && <p className="product-detail-description">{t(product.short_description || product.description)}</p>}
-                {product.size && !poleConfigurations.length && <p className="product-detail-size">{t("Size / specification")}: {t(product.size)}</p>}
                 {poleConfigurations.length > 1 && <label className="product-pole-selector">
                   {t("Pole configuration")}
                   <select value={selectedPole} onChange={(event) => setSelectedPole(event.target.value)} aria-label={t("Pole configuration")}>
@@ -157,37 +193,22 @@ export default function ProductDetails() {
               </div>
             </article>
           )}
+          {product && (relatedProducts.length > 0 || relatedError) && (
+            <section className="related-products-section" aria-labelledby="related-products-title">
+              <h2 id="related-products-title">{t("Related products")}</h2>
+              <ResourceFeedback
+                error={relatedError}
+                onRetry={() => setRelatedRetry((current) => current + 1)}
+              />
+              {!relatedError && relatedProducts.length > 0 && (
+                <div className="product-grid">
+                  {relatedProducts.map((item) => <ProductCard key={item.id} product={item} />)}
+                </div>
+              )}
+            </section>
+          )}
         </div>
       </section>
     </>
   );
-}
-
-function getSpecificationRows(product, t, poleConfigurations) {
-  const specifications = product.specifications || [];
-  const findValue = (pattern) => specifications.find(({ name }) => pattern.test(name || ""))?.value;
-  const rows = [];
-  if (product.sku) rows.push({ key: "sku", name: "SKU", value: product.sku });
-
-  if (/mcb/i.test(product.name || "")) {
-    rows.push(
-      { key: "model-number", name: "Model number", value: findValue(/model(\s*number)?/i) || t("Contact for specification") },
-      { key: "ampere-rating", name: "Ampere rating", value: findValue(/ampere|current rating/i) || t("Contact for specification") },
-      { key: "breaking-capacity", name: "Breaking capacity", value: findValue(/breaking capacity/i) || t("Contact for specification") },
-    );
-  }
-
-  const handledNames = /^(sku|model(\s*number)?|ampere(\s*rating)?|current rating|breaking capacity)$/i;
-  specifications
-    .filter(({ name }) => {
-      const normalizedName = (name || "").trim();
-      return !handledNames.test(normalizedName) && !(poleConfigurations.length && /^(pole configuration|size)$/i.test(normalizedName));
-    })
-    .forEach((specification, index) => rows.push({
-      key: specification.id || `${specification.name}-${index}`,
-      name: specification.name,
-      value: specification.value,
-    }));
-
-  return rows;
 }

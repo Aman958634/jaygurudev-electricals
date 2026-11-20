@@ -16,8 +16,8 @@ export default function Gallery() {
   return (
     <>
       <Seo
-        title="Gallery | Jay Guru Dev Electricals"
-        description="Explore electrical products, lighting and interior inspiration from Jay Guru Dev Electricals in Palanpur, Gujarat."
+        title="Gallery | JAY GURUDEV ELECTRIICALS"
+        description="Explore electrical products, lighting and interior inspiration from JAY GURUDEV ELECTRIICALS in Palanpur, Gujarat."
         canonicalPath="/gallery"
       />
       <section className="page-heading">

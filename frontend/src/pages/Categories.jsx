@@ -14,8 +14,8 @@ export default function Categories() {
   return (
     <>
       <Seo
-        title="Electrical Product Categories | Jay Guru Dev Electricals"
-        description="Explore electrical product categories at Jay Guru Dev Electricals and find products for your home or business."
+        title="Electrical Product Categories | JAY GURUDEV ELECTRIICALS"
+        description="Explore electrical product categories at JAY GURUDEV ELECTRIICALS and find products for your home or business."
         canonicalPath="/categories"
       />
       <section className="page-heading categories-heading">

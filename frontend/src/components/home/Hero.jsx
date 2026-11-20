@@ -1,12 +1,11 @@
-import { ArrowRight, BadgeCheck, Lightbulb, Plug, ShieldCheck, Star } from "lucide-react";
+import { ArrowRight, BadgeCheck, FileText, Lightbulb, Plug, ShieldCheck, Star } from "lucide-react";
 import Button from "../common/Button.jsx";
-import WhatsAppIcon from "../common/WhatsAppIcon.jsx";
-import { getWhatsAppUrl } from "../../utils/whatsapp.js";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 import showroom from "../../assets/images/reference-showroom-hero.webp";
 import { useSiteData } from "../../context/SiteDataContext.jsx";
 import ResourceFeedback from "../common/ResourceFeedback.jsx";
 import { normalizeBusinessCopy } from "../../utils/branding.js";
+import { useEnquiry } from "../../context/EnquiryContext.jsx";
 
 const assurances = [
   { icon: BadgeCheck, label: "Electricals" },
@@ -18,6 +17,7 @@ const assurances = [
 export default function Hero() {
   const { language, t } = useLanguage();
   const { business, pages, statistics, refresh } = useSiteData();
+  const { openDealerQuotation } = useEnquiry();
   const homePage = pages.data.find((item) => item.slug === "home");
   const displayedStatistics = statistics.data.filter((statistic) =>
     ["google_rating", "happy_reviews", "years_of_service"].includes(statistic.metric_key),
@@ -28,14 +28,14 @@ export default function Hero() {
       <div className="container hero-layout">
         <div className="hero-copy">
           <span className="hero-kicker"><span className="kicker-dot" /> {t("Trusted electrical destination in Palanpur")}</span>
-          <h1>{normalizeBusinessCopy(homePage?.title || "JAY GURUDEV")}<br /><span>{normalizeBusinessCopy(homePage?.heading || "ELECTRICALS")}</span></h1>
+          <h1>{normalizeBusinessCopy(homePage?.title || "JAY GURUDEV")}<br /><span>{normalizeBusinessCopy(homePage?.heading || "ELECTRIICALS")}</span></h1>
           <p className="hero-description" lang={language}>{t(homePage?.description || "Complete Electrical & Home Appliances under one roof — for your home, shop and project.")}</p>
           <div className="hero-assurances">
             {assurances.map(({ icon: Icon, label }) => <span key={label}><Icon size={17} /> {t(label)}</span>)}
           </div>
           <div className="hero-actions">
-            <Button href={getWhatsAppUrl(`${t("Hello")} ${business.name}, ${t("I would like to enquire about your products.")}`, business)} target="_blank" rel="noreferrer">
-              <WhatsAppIcon className="whatsapp-icon" /> {t("Enquire on WhatsApp")} <ArrowRight size={17} />
+            <Button type="button" onClick={openDealerQuotation}>
+              <FileText size={17} aria-hidden="true" /> {t("Get Dealer Quotation")} <ArrowRight size={17} />
             </Button>
             <Button to="/contact" variant="light"><MapPinIcon /> {t("Visit Our Showroom")} <ArrowRight size={17} /></Button>
           </div>

@@ -10,7 +10,7 @@ export default function Products() {
   return (
     <>
       <Seo
-        title="Electrical Products | Jay Guru Dev Electricals"
+        title="Electrical Products | JAY GURUDEV ELECTRIICALS"
         description="Browse electrical products, lighting and home appliances. Search by product, brand or category, and enquire about availability."
         canonicalPath="/products"
       />

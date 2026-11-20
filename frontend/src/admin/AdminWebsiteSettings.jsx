@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Save } from "lucide-react";
 import { adminRequest } from "./adminApi.js";
-import { BUSINESS, LEGACY_BUSINESS } from "../utils/constants.js";
+import { BUSINESS, LEGACY_BUSINESS, normalizeBusinessHours } from "../utils/constants.js";
 
 const businessFields = [
-  { key: "name", label: "Business name", required: true, defaultValue: BUSINESS.name },
+  { key: "name", label: "Business name", required: true, readOnly: true, defaultValue: BUSINESS.name },
   { key: "phone", label: "Phone number", required: true },
   { key: "phoneDigits", label: "WhatsApp number (digits only)", required: true, pattern: "[0-9]{10,13}" },
   { key: "email", label: "Business email", type: "email", required: true },
@@ -45,9 +45,9 @@ export default function AdminWebsiteSettings({ token, onChanged }) {
         if (!active) return;
         const rows = response.data || [];
         const nextValues = Object.fromEntries(rows.map((row) => [row.key_name, row.key_value]));
-        if (nextValues.name === "JAY GURUDEVV ELECTRIICALS") nextValues.name = BUSINESS.name;
+        nextValues.name = BUSINESS.name;
         if (nextValues.address === LEGACY_BUSINESS.address) nextValues.address = BUSINESS.address;
-        if (nextValues.hours === LEGACY_BUSINESS.hours) nextValues.hours = BUSINESS.hours;
+        nextValues.hours = normalizeBusinessHours(nextValues.hours);
         if (nextValues.mapsUrl === LEGACY_BUSINESS.mapsUrl) nextValues.mapsUrl = BUSINESS.mapsUrl;
         nextValues.googleReviewVerified = String(nextValues.googleReviewVerified || "false").toLowerCase() === "true";
         setValues(nextValues);
@@ -66,7 +66,9 @@ export default function AdminWebsiteSettings({ token, onChanged }) {
     try {
       for (const field of allFields) {
         const currentValue = values[field.key] ?? field.defaultValue ?? "";
-        const value = field.type === "checkbox" ? String(currentValue === true || currentValue === "true") : String(currentValue);
+        const value = field.type === "checkbox"
+          ? String(currentValue === true || currentValue === "true")
+          : field.key === "hours" ? normalizeBusinessHours(currentValue) : String(currentValue);
         if (!existing.has(field.key) && !value.trim()) continue;
         const method = existing.has(field.key) ? "PUT" : "POST";
         const path = method === "PUT" ? `/settings/${encodeURIComponent(field.key)}` : "/settings";
@@ -76,6 +78,7 @@ export default function AdminWebsiteSettings({ token, onChanged }) {
         await adminRequest(token, path, { method, body: JSON.stringify(body) });
         existing.add(field.key);
       }
+      setValues((current) => ({ ...current, hours: normalizeBusinessHours(current.hours), name: BUSINESS.name }));
       setNotice("Website settings saved.");
       onChanged();
     } catch (requestError) {
@@ -118,6 +121,7 @@ function renderFields(fields, values, setValues) {
             max={field.max}
             step={field.step}
             required={field.required}
+            readOnly={field.readOnly}
             title={field.pattern ? "Enter 10 to 13 digits without spaces or symbols." : undefined}
             checked={field.type === "checkbox" ? value === true || value === "true" : undefined}
             value={field.type === "checkbox" ? undefined : value}

@@ -2,6 +2,7 @@ import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadEnv } from "vite";
+import { BUSINESS_NAME, normalizeBusinessCopy } from "../src/utils/branding.js";
 
 const frontendDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outputDirectory = path.join(frontendDirectory, "dist");
@@ -16,38 +17,38 @@ const requireProducts = process.argv.includes("--require-products")
 const publicPages = [
   {
     path: "/",
-    title: "Jay Guru Dev Electricals | Electrical Products & Solutions",
-    description: "Explore quality electrical products, brands and electrical solutions at Jay Guru Dev Electricals.",
+    title: `${BUSINESS_NAME} | Electrical Products & Solutions`,
+    description: `Explore quality electrical products, brands and electrical solutions at ${BUSINESS_NAME}.`,
   },
   {
     path: "/about",
-    title: "About Jay Guru Dev Electricals | Palanpur",
-    description: "Learn about Jay Guru Dev Electricals, a local destination for electrical products, lighting and home appliances in Palanpur, Gujarat.",
+    title: `About ${BUSINESS_NAME} | Palanpur`,
+    description: `Learn about ${BUSINESS_NAME}, a local destination for electrical products, lighting and home appliances in Palanpur, Gujarat.`,
   },
   {
     path: "/products",
-    title: "Electrical Products | Jay Guru Dev Electricals",
+    title: `Electrical Products | ${BUSINESS_NAME}`,
     description: "Browse electrical products, lighting and home appliances. Search by product, brand or category, and enquire about availability.",
   },
   {
     path: "/categories",
-    title: "Electrical Product Categories | Jay Guru Dev Electricals",
-    description: "Explore electrical product categories at Jay Guru Dev Electricals and find products for your home or business.",
+    title: `Electrical Product Categories | ${BUSINESS_NAME}`,
+    description: `Explore electrical product categories at ${BUSINESS_NAME} and find products for your home or business.`,
   },
   {
     path: "/brands",
-    title: "Electrical Brands | Jay Guru Dev Electricals",
-    description: "Browse brand names and official websites. Contact Jay Guru Dev Electricals in Palanpur to confirm product availability.",
+    title: `Electrical Brands | ${BUSINESS_NAME}`,
+    description: `Browse brand names and official websites. Contact ${BUSINESS_NAME} in Palanpur to confirm product availability.`,
   },
   {
     path: "/gallery",
-    title: "Gallery | Jay Guru Dev Electricals",
-    description: "Browse genuine showroom, workshop and project photos from Jay Guru Dev Electricals in Palanpur.",
+    title: `Gallery | ${BUSINESS_NAME}`,
+    description: `Browse genuine showroom, workshop and project photos from ${BUSINESS_NAME} in Palanpur.`,
   },
   {
     path: "/contact",
-    title: "Contact Jay Guru Dev Electricals | Palanpur",
-    description: "Contact Jay Guru Dev Electricals about electrical products, home appliances or a visit to our showroom in Palanpur, Gujarat.",
+    title: `Contact ${BUSINESS_NAME} | Palanpur`,
+    description: `Contact ${BUSINESS_NAME} about electrical products, home appliances or a visit to our showroom in Palanpur, Gujarat.`,
   },
 ];
 
@@ -91,7 +92,7 @@ function renderPage(template, { title, description, canonicalUrl, image = social
     `<meta property="og:image:alt" content="${escapeHtml(imageAlt)}" />`,
     `<meta property="og:url" content="${escapeHtml(canonicalUrl)}" />`,
     `<meta property="og:type" content="${escapeHtml(type)}" />`,
-    '<meta property="og:site_name" content="Jay Guru Dev Electricals" />',
+    `<meta property="og:site_name" content="${escapeHtml(BUSINESS_NAME)}" />`,
     '<meta name="twitter:card" content="summary_large_image" />',
     `<meta name="twitter:title" content="${escapeHtml(title)}" />`,
     `<meta name="twitter:description" content="${escapeHtml(description)}" />`,
@@ -159,8 +160,8 @@ async function main() {
 
     const canonicalPath = `/products/${id}`;
     const canonicalUrl = new URL(canonicalPath, `${siteUrl}/`).href;
-    const title = product.meta_title || `${product.name} | Jay Guru Dev Electricals`;
-    const description = String(product.meta_description || product.short_description || product.description || `Enquire about ${product.name} at Jay Guru Dev Electricals.`).slice(0, 300);
+    const title = normalizeBusinessCopy(product.meta_title || `${product.name} | ${BUSINESS_NAME}`);
+    const description = normalizeBusinessCopy(String(product.meta_description || product.short_description || product.description || `Enquire about ${product.name} at ${BUSINESS_NAME}.`).slice(0, 300));
     const image = absoluteProductImage(product.image);
     const schema = {
       "@context": "https://schema.org",

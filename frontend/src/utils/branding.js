@@ -1,15 +1,16 @@
-export const BUSINESS_NAME = "JAY GURUDEV ELECTRICALS";
+export const BUSINESS_NAME = "JAY GURUDEV ELECTRIICALS";
 
 export function normalizeBusinessCopy(value) {
   return String(value ?? "")
-    .replace(/GURUDEVV/gi, (match) => {
-      if (match === match.toUpperCase()) return "GURUDEV";
-      if (match[0] === match[0].toUpperCase()) return "Gurudev";
-      return "gurudev";
-    })
-    .replace(/ELECTRIICALS/gi, (match) => {
-      if (match === match.toUpperCase()) return "ELECTRICALS";
-      if (match[0] === match[0].toUpperCase()) return "Electricals";
-      return "electricals";
-    });
+    .replace(/\bJAY\s+GURU\s*DEV[V]?\s+ELECTRI?ICALS\b/gi, BUSINESS_NAME)
+    .replace(/\bGURUDEV[V]?\b/gi, (match) => preserveCase(match, "GURUDEV"))
+    .replace(/\bELECTRI?ICALS\b/gi, (match) => preserveCase(match, "ELECTRIICALS"));
+}
+
+function preserveCase(value, replacement) {
+  if (value === value.toUpperCase()) return replacement;
+  if (value[0] === value[0].toUpperCase()) {
+    return replacement[0] + replacement.slice(1).toLowerCase();
+  }
+  return replacement.toLowerCase();
 }

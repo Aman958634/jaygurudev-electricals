@@ -14,8 +14,8 @@ export default function About() {
   return (
     <>
       <Seo
-        title="About Jay Guru Dev Electricals | Palanpur"
-        description="Learn about Jay Guru Dev Electricals, a local destination for electrical products, lighting and home appliances in Palanpur, Gujarat."
+        title="About JAY GURUDEV ELECTRIICALS | Palanpur"
+        description="Learn about JAY GURUDEV ELECTRIICALS, a local destination for electrical products, lighting and home appliances in Palanpur, Gujarat."
         canonicalPath="/about"
       />
       <PageHeading slug="about" fallback={{ eyebrow: "About our showroom", title: "Rooted in", highlight: "Palanpur", description: "A local destination for electrical essentials and home appliances." }} />

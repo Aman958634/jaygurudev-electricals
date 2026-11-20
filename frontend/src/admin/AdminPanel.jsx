@@ -14,6 +14,7 @@ import AdminResource from "./AdminResource.jsx";
 import AdminWebsiteSettings from "./AdminWebsiteSettings.jsx";
 import { resourceConfigs } from "./adminResources.js";
 import "./admin.css";
+import { BUSINESS_NAME } from "../utils/branding.js";
 import logo from "../assets/images/jay-gurudev-electricals-logo.png";
 
 const navigation = [
@@ -164,7 +165,11 @@ export default function AdminPanel() {
     <div className={`admin-shell${sidebarCollapsed ? " admin-shell--collapsed" : ""}`}>
       {mobileNavOpen && <button className="admin-sidebar-scrim" aria-label="Close menu" onClick={() => setMobileNavOpen(false)} />}
       <aside id="admin-sidebar" className={`admin-sidebar${mobileNavOpen ? " admin-sidebar--open" : ""}`}>
-        <div className="admin-brand-lockup"><img className="admin-brand-logo" src={logo} alt="Jay Gurudev Electricals" /><span><strong>ADMIN CONSOLE</strong><small>WEBSITE MANAGEMENT</small></span><button className="admin-mobile-close" aria-label="Close menu" onClick={() => setMobileNavOpen(false)}><X size={19} /></button></div>
+        <div className="admin-brand-lockup">
+          <img className="admin-brand-logo" src={logo} alt={BUSINESS_NAME} />
+          <span><strong>ADMIN CONSOLE</strong><small>WEBSITE MANAGEMENT</small></span>
+          <button className="admin-mobile-close" aria-label="Close menu" onClick={() => setMobileNavOpen(false)}><X size={19} /></button>
+        </div>
         <div className="admin-sidebar-label">WORKSPACE</div>
         <nav className="admin-nav" aria-label="Admin sections">{navigation.map(({ id, label, icon: Icon }) => <button key={id} title={label} aria-label={label} aria-current={activeSection === id ? "page" : undefined} className={`admin-nav-item${activeSection === id ? " is-active" : ""}`} onClick={() => navigate(id)}><Icon size={18} /><span>{label}</span>{id === "dashboard" && <span className="admin-nav-indicator" />}</button>)}</nav>
         <div className="admin-sidebar-bottom"><ShieldCheck size={17} /><span>Protected administrator area</span></div>

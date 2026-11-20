@@ -1,12 +1,13 @@
 {
-  "name": "jay-gurudevv-electricals",
+  "name": "jay-gurudev-electriicals",
   "private": true,
   "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/prerender-seo.js --require-products",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "node --test"
   },
   "dependencies": {
     "lucide-react": "^0.468.0",

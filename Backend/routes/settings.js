@@ -5,6 +5,16 @@ import { requireAuth } from '../middleware/auth.js';
 import { logAdminActivity } from '../services/activityLog.js';
 
 const router = Router();
+const businessName = 'JAY GURUDEV ELECTRIICALS';
+const businessHours = 'Monday – Saturday · 8:00 AM – 8:00 PM · Sunday: CLOSED';
+const canonicalSettings = { name: businessName, hours: businessHours };
+
+function normalizeSettingRows(rows) {
+  return rows.map((row) => Object.hasOwn(canonicalSettings, row.key_name)
+    ? { ...row, key_value: canonicalSettings[row.key_name] }
+    : row);
+}
+
 router.get('/', async (req, res, next) => {
   try {
     const publicKeys = [
@@ -18,7 +28,11 @@ router.get('/', async (req, res, next) => {
        ORDER BY key_name ASC`,
       publicKeys,
     );
-    const settings = Object.fromEntries(rows.map(({ key_name, key_value }) => [key_name, key_value]));
+    const normalizedRows = normalizeSettingRows(rows);
+    const settings = {
+      ...Object.fromEntries(normalizedRows.map(({ key_name, key_value }) => [key_name, key_value])),
+      ...canonicalSettings,
+    };
     const business = {
       name: settings.name ?? null,
       phone: settings.phone ?? null,
@@ -37,7 +51,7 @@ router.get('/', async (req, res, next) => {
       googleReviewCount: settings.googleReviewCount ?? null,
       googleReviewVerified: settings.googleReviewVerified ?? 'false',
     };
-    return res.json({ success: true, data: rows, settings, business });
+    return res.json({ success: true, data: normalizedRows, settings, business });
   } catch (error) {
     next(error);
   }
@@ -46,7 +60,7 @@ router.get('/', async (req, res, next) => {
 router.get('/admin/list', requireAuth, async (req, res, next) => {
   try {
     const rows = await query('SELECT * FROM site_settings ORDER BY key_name ASC');
-    return res.json({ success: true, data: rows });
+    return res.json({ success: true, data: normalizeSettingRows(rows) });
   } catch (error) {
     return next(error);
   }

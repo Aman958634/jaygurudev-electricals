@@ -12,8 +12,8 @@ export default function Brands() {
   return (
     <>
       <Seo
-        title="Electrical Brands | Jay Guru Dev Electricals"
-        description="Browse electrical, lighting and home-appliance brands. Contact Jay Guru Dev Electricals in Palanpur to confirm product availability."
+        title="Electrical Brands | JAY GURUDEV ELECTRIICALS"
+        description="Browse electrical, lighting and home-appliance brands. Contact JAY GURUDEV ELECTRIICALS in Palanpur to confirm product availability."
         canonicalPath="/brands"
       />
       <section className="page-heading">

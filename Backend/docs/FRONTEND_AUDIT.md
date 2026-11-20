@@ -1,4 +1,4 @@
-# Frontend Audit for Jay Gurudevv Electricals
+# Frontend Audit for Jay Gurudev Electricals
 
 ## 1. Frontend pages and routes
 
@@ -216,7 +216,7 @@ Frontend assets live in `frontend/src/assets/images/` and are imported directly 
 - `circuit-breaker.webp`
 - `electrical-wiring.webp`
 - `home-appliance.webp`
-- `jay-gurudevv-logo.jpg`
+- `jay-gurudev-electricals-logo.png`
 - `led-lights.webp`
 - `lighting-interior.webp`
 - `living-room.webp`

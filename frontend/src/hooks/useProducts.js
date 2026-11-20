@@ -30,21 +30,21 @@ export function useProducts({
     const controller = new AbortController();
     setResource((current) => ({ ...current, loading: true, error: null }));
     const loadProducts = async () => {
-      const response = await apiRequest(`/products?${query}`, { signal: controller.signal });
+      const response = await apiRequest(`/products?${query}`, { signal: controller.signal, cache: "no-store" });
       let products = response.data || [];
 
       if (allProducts && response.pagination?.totalPages > 1) {
         const pageQueries = Array.from({ length: response.pagination.totalPages - 1 }, (_, index) => {
           const params = new URLSearchParams(query);
           params.set("page", String(index + 2));
-          return apiRequest(`/products?${params}`, { signal: controller.signal });
+          return apiRequest(`/products?${params}`, { signal: controller.signal, cache: "no-store" });
         });
         const remainingPages = await Promise.all(pageQueries);
         products = products.concat(...remainingPages.map((pageResponse) => pageResponse.data || []));
       }
 
       if (allProducts) {
-        products = Array.from(new Map(products.map((product) => [product.id, product])).values());
+        products = Array.from(new Map(products.map((product) => [String(product.id), product])).values());
       }
 
       setResource({

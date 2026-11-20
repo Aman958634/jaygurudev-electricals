@@ -6,6 +6,7 @@ import MobileMenu from "./MobileMenu.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 import { useEnquiry } from "../../context/EnquiryContext.jsx";
 import logo from "../../assets/images/jay-gurudev-electricals-logo.png";
+import { BUSINESS_NAME } from "../../utils/branding.js";
 
 const navIcons = {
   "/": Home,
@@ -50,8 +51,8 @@ export default function Navbar() {
   return (
     <header className="site-header">
       <div className="container navbar">
-        <Link className="brand-lockup" to="/" aria-label={t("Jay Gurudev Electricals home")}>
-          <img className="brand-logo" src={logo} alt="JAY GURUDEV ELECTRICALS" />
+        <Link className="brand-lockup" to="/" aria-label={t(`${BUSINESS_NAME} home`)}>
+          <img className="brand-logo" src={logo} alt={BUSINESS_NAME} />
         </Link>
         <nav className="desktop-nav" aria-label={t("Main navigation")}>
           {NAV_LINKS.map((link) => {
