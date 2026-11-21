@@ -6,14 +6,14 @@ import {
   selectHomepageProducts,
 } from "../src/utils/productPresentation.js";
 
-test("homepage selection prefers active featured products and ignores inactive records", () => {
+test("homepage selection prefers active featured products, fills from active stock, and ignores inactive records", () => {
   const products = [
     { id: 1, is_active: 1, is_featured: 0, name: "Latest product" },
     { id: 2, is_active: 1, is_featured: 1, name: "Featured product" },
     { id: 3, is_active: 0, is_featured: 1, name: "Inactive featured product" },
   ];
 
-  assert.deepEqual(selectHomepageProducts(products).map((product) => product.id), [2]);
+  assert.deepEqual(selectHomepageProducts(products).map((product) => product.id), [2, 1]);
 });
 
 test("homepage selection falls back to the newest active products in API order", () => {
@@ -24,6 +24,21 @@ test("homepage selection falls back to the newest active products in API order",
   ];
 
   assert.deepEqual(selectHomepageProducts(products, 1).map((product) => product.id), [2]);
+});
+
+test("homepage selection returns exactly four unique active products when four or more are available", () => {
+  const products = [
+    { id: 1, is_active: 1, is_featured: 0, name: "Latest product" },
+    { id: 2, is_active: 1, is_featured: 1, name: "Featured product" },
+    { id: 3, is_active: 1, is_featured: 0, name: "Trivo Switch", brand: "GreatWhite", category: "Switches" },
+    { id: 4, is_active: 1, is_featured: 0, name: "Next product" },
+    { id: 5, is_active: 1, is_featured: 0, name: "Another product" },
+  ];
+
+  const selected = selectHomepageProducts(products);
+  assert.equal(selected.length, 4);
+  assert.equal(new Set(selected.map((product) => product.id)).size, 4);
+  assert.deepEqual(selected.map((product) => product.id), [3, 2, 1, 4]);
 });
 
 test("product card specifications show existing model, size, rating and pole data only", () => {

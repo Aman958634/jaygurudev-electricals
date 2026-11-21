@@ -8,14 +8,13 @@ export function getPoleConfigurations(product) {
     .filter((option) => ["SP", "DP", "TP"].includes(option));
 }
 
-export function selectHomepageProducts(products, limit = 8) {
+export function selectHomepageProducts(products, limit = 4) {
   const activeProducts = (Array.isArray(products) ? products : [])
     .filter((product) => product && isEnabled(product.is_active));
   const priorityProducts = activeProducts.filter(isPriorityStockProduct);
   const featuredProducts = activeProducts.filter((product) => isEnabled(product.is_featured));
-  const remainingProducts = featuredProducts.length ? featuredProducts : activeProducts;
   return [...new Map(
-    [...priorityProducts, ...remainingProducts]
+    [...priorityProducts, ...featuredProducts, ...activeProducts]
       .map((product) => [String(product.id), product]),
   ).values()].slice(0, limit);
 }

@@ -47,7 +47,7 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; scroll-padding-top: 98px; }
+html { scroll-behavior: smooth; scroll-padding-top: 64px; }
 body { width: 100%; min-width: 0; margin: 0; }
 #root { width: 100%; max-width: 100%; }
 body, button, input, select, textarea { font-family: var(--font-sans); }
@@ -82,14 +82,6 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .button-outline:hover { border-color: var(--orange); color: var(--orange-deep); }
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; clip-path: inset(50%); }
 
-.announcement-bar { position: relative; z-index: 20; background: var(--navy); color: #e5e9ef; font-size: 11px; }
-.announcement-inner, .announcement-inner > span, .announcement-actions, .announcement-actions a { display: flex; align-items: center; }
-.announcement-inner { min-height: 35px; justify-content: space-between; gap: 20px; }
-.announcement-inner > span, .announcement-actions a { gap: 7px; }
-.announcement-inner svg { color: #f3a15e; }
-.announcement-actions { gap: 23px; }
-.announcement-actions a:last-child { color: #ffc184; font-weight: 700; }
-.announcement-actions a:hover { color: #fff; }
 .site-header { position: sticky; z-index: 15; top: 0; border-bottom: 1px solid rgba(17, 29, 49, .08); background: rgba(255,255,255,.97); backdrop-filter: blur(14px); }
 .navbar { display: flex; min-height: 82px; align-items: center; justify-content: space-between; gap: 26px; }
 .brand-lockup { display: inline-flex; flex: 0 0 auto; align-items: center; gap: 10px; }
@@ -428,13 +420,6 @@ a.contact-card:hover { transform: translateY(-2px); border-color: #dfb28d; }
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
 }
 
-.announcement-bar { background: var(--navy); }
-.announcement-inner { min-height: 30px; }
-.announcement-inner svg { color: var(--orange); }
-.announcement-inner svg.whatsapp-icon { color: #25d366; }
-.announcement-actions a:last-child { display: inline-flex; align-items: center; gap: 6px; padding: 0 16px; background: var(--orange); color: var(--navy); line-height: 30px; }
-.announcement-actions a:last-child:hover { background: #ffd44f; color: var(--navy); }
-.announcement-location { display: none !important; }
 .site-header { border-color: #edf0f2; box-shadow: 0 5px 18px rgba(9,30,50,.05); }
 .navbar { min-height: 50px; gap: 20px; }
 .brand-mark { border-radius: 50%; background: linear-gradient(140deg, #061a2d 48%, #ffc526 49%, #ffc526 64%, #061a2d 65%); }

@@ -1,7 +1,6 @@
 import { Route, Routes } from "react-router-dom";
 import Navbar from "./components/layout/Navbar.jsx";
 import Footer from "./components/layout/Footer.jsx";
-import AnnouncementBar from "./components/layout/AnnouncementBar.jsx";
 import WhatsAppButton from "./components/common/WhatsAppButton.jsx";
 import ScrollToTop from "./components/common/ScrollToTop.jsx";
 import Home from "./pages/Home.jsx";
@@ -30,7 +29,6 @@ function PublicSite() {
   return (
     <>
       <ScrollToTop />
-      <AnnouncementBar />
       <Navbar />
       <main>
         <Routes>

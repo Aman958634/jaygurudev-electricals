@@ -11,7 +11,7 @@ import ProductCard from "../products/ProductCard.jsx";
 export default function FeaturedProducts() {
   const { t } = useLanguage();
   const { products, loading, error, refresh } = useProducts({ allProducts: true, sort: "newest" });
-  const homepageProducts = useMemo(() => selectHomepageProducts(products), [products]);
+  const homepageProducts = useMemo(() => selectHomepageProducts(products, 4), [products]);
 
   if (!loading && !error && homepageProducts.length === 0) return null;
 
