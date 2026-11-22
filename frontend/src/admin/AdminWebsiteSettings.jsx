@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Save } from "lucide-react";
 import { adminRequest } from "./adminApi.js";
-import { BUSINESS, LEGACY_BUSINESS, normalizeBusinessHours } from "../utils/constants.js";
+import { BUSINESS, isLegacyShopAddress, normalizeBusinessHours } from "../utils/constants.js";
 
 const businessFields = [
   { key: "name", label: "Business name", required: true, readOnly: true, defaultValue: BUSINESS.name },
@@ -46,9 +46,9 @@ export default function AdminWebsiteSettings({ token, onChanged }) {
         const rows = response.data || [];
         const nextValues = Object.fromEntries(rows.map((row) => [row.key_name, row.key_value]));
         nextValues.name = BUSINESS.name;
-        if (nextValues.address === LEGACY_BUSINESS.address) nextValues.address = BUSINESS.address;
+        if (isLegacyShopAddress(nextValues.address)) nextValues.address = BUSINESS.address;
         nextValues.hours = normalizeBusinessHours(nextValues.hours);
-        if (nextValues.mapsUrl === LEGACY_BUSINESS.mapsUrl) nextValues.mapsUrl = BUSINESS.mapsUrl;
+        if (nextValues.mapsUrl !== BUSINESS.mapsUrl) nextValues.mapsUrl = BUSINESS.mapsUrl;
         nextValues.googleReviewVerified = String(nextValues.googleReviewVerified || "false").toLowerCase() === "true";
         setValues(nextValues);
         setExisting(new Set(rows.map((row) => row.key_name)));

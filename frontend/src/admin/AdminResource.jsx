@@ -15,6 +15,10 @@ function displayValue(value, key) {
   return value === null || value === undefined || value === "" ? "—" : String(value);
 }
 
+function additionalSpecifications(specifications) {
+  return (Array.isArray(specifications) ? specifications : []).filter(({ name }) => !/^(?:model(?:\s*(?:number|no\.?)?)?|capacity(?:\s*unit)?|unit|size(?:\s*\/\s*(?:specification|rating))?|rating|packing(?:\s*\/\s*unit)?|unit\s*packing)$/i.test(String(name || "")));
+}
+
 export default function AdminResource({ config, resource, token, onChanged }) {
   const singularTitle = config.title === "Categories" ? "Category" : config.title.replace(/s$/, "");
   const [rows, setRows] = useState([]);
@@ -97,6 +101,10 @@ export default function AdminResource({ config, resource, token, onChanged }) {
         continue;
       }
       const value = form.get(field.name);
+      if (["model", "capacity", "capacity_unit", "size_rating", "packing"].includes(field.name)) {
+        payload.append(field.name, value || "");
+        continue;
+      }
       if (field.name === "specifications" && field.format === "json") {
         try {
           const parsed = value ? JSON.parse(value) : [];
@@ -209,7 +217,7 @@ export default function AdminResource({ config, resource, token, onChanged }) {
               {config.fields.map((field) => {
                 const current = editing[field.previewField || field.name];
                 const value = field.name === "specifications"
-                  ? JSON.stringify(editing.specifications || [], null, 2)
+                  ? JSON.stringify(additionalSpecifications(editing.specifications), null, 2)
                   : editing[field.name] ?? "";
                 if (field.type === "file") {
                   const preview = filePreviews[field.name];
@@ -288,7 +296,7 @@ export default function AdminResource({ config, resource, token, onChanged }) {
                 if (field.type === "textarea") {
                   return <label className="admin-field admin-field--wide" key={field.name}><span>{field.label}</span><textarea name={field.name} defaultValue={value} required={field.required} rows={field.format === "json" ? 6 : 4} /></label>;
                 }
-                return <label className="admin-field" key={field.name}><span>{field.label}</span><input name={field.name} type={field.type || "text"} step={field.step} defaultValue={value} required={field.required} /></label>;
+                return <label className="admin-field" key={field.name}><span>{field.label}</span><input name={field.name} type={field.type || "text"} step={field.step} placeholder={field.placeholder} defaultValue={value} required={field.required} /></label>;
               })}
               <div className="admin-form-actions"><button type="button" className="admin-button admin-button--quiet" onClick={closeEditor}>Cancel</button><button type="submit" className="admin-button admin-button--primary" disabled={busy}>{busy ? "Saving..." : "Save changes"}</button></div>
             </form>

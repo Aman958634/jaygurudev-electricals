@@ -6,7 +6,7 @@ import WhatsAppIcon from "../components/common/WhatsAppIcon.jsx";
 import { useLanguage } from "../context/LanguageContext.jsx";
 import { useSiteData } from "../context/SiteDataContext.jsx";
 import { apiRequest, resolveMediaUrl } from "../services/api.js";
-import { getWhatsAppUrl } from "../utils/whatsapp.js";
+import { getProductEnquiryMessage, getWhatsAppUrl } from "../utils/whatsapp.js";
 import Seo from "../components/common/Seo.jsx";
 import { BUSINESS_NAME, normalizeBusinessCopy } from "../utils/branding.js";
 import { useEnquiry } from "../context/EnquiryContext.jsx";
@@ -90,9 +90,7 @@ export default function ProductDetails() {
   const price = Number(product?.price);
   const hasPrice = Number.isFinite(price) && price > 0 && !product?.price_on_request && product?.stock_status !== "price_on_request";
   const priceOnRequest = product?.price_on_request || product?.stock_status === "price_on_request";
-  const message = product
-    ? `${t("Hello")} ${business.name}, ${t("I would like to enquire about")} ${t(product.name)}${product.brand ? ` by ${product.brand}` : ""}${selectedPole ? ` (${t("Pole configuration")}: ${selectedPole})` : product.size && !poleConfigurations.length ? ` (${t(product.size)})` : ""}.`
-    : undefined;
+  const message = product ? getProductEnquiryMessage(product, business, selectedPole) : undefined;
   const productDescription = normalizeBusinessCopy(product?.meta_description || product?.short_description || product?.description || `Enquire about ${product?.name || "this product"} at ${BUSINESS_NAME}.`);
   const productTitle = normalizeBusinessCopy(product?.meta_title || (product ? `${product.name} | ${BUSINESS_NAME}` : `Product | ${BUSINESS_NAME}`));
   const stockAvailability = product?.stock_status === "out_of_stock"
@@ -161,7 +159,7 @@ export default function ProductDetails() {
                 </div>}
               </div>
               <div className="product-detail-copy">
-                {product.brand && <span className="product-detail-brand">{product.brand}</span>}
+                {product.brand && <span className="product-detail-brand">{t("Brand")}: {product.brand}</span>}
                 <h2>{t(product.name)}</h2>
                 {product.category && <p className="product-detail-category">{t(product.category)}</p>}
                 {(product.short_description || product.description) && <p className="product-detail-description">{t(product.short_description || product.description)}</p>}

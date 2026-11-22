@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../services/api.js";
-import { BUSINESS as DEFAULT_BUSINESS, LEGACY_BUSINESS, normalizeBusinessHours } from "../utils/constants.js";
+import { BUSINESS as DEFAULT_BUSINESS, isLegacyShopAddress, normalizeBusinessHours } from "../utils/constants.js";
 import { BUSINESS_NAME } from "../utils/branding.js";
 
 const resourcePaths = {
@@ -63,9 +63,13 @@ export function SiteDataProvider({ children }) {
       ...DEFAULT_BUSINESS,
       ...configured,
       name: BUSINESS_NAME,
-      address: !configured.address || configured.address === LEGACY_BUSINESS.address ? DEFAULT_BUSINESS.address : configured.address,
+      // A deployed settings row can still contain the retired showroom address.
+      // Keep the public site correct until an administrator saves the canonical value.
+      address: isLegacyShopAddress(configured.address) ? DEFAULT_BUSINESS.address : configured.address,
       hours: normalizeBusinessHours(configured.hours),
-      mapsUrl: !configured.mapsUrl || configured.mapsUrl === LEGACY_BUSINESS.mapsUrl ? DEFAULT_BUSINESS.mapsUrl : configured.mapsUrl,
+      // Public location links use the client-confirmed shop listing. The admin
+      // setting is preserved; it is not used to redirect customers elsewhere.
+      mapsUrl: DEFAULT_BUSINESS.mapsUrl,
       googleReviewVerified: String(configured.googleReviewVerified ?? DEFAULT_BUSINESS.googleReviewVerified).toLowerCase(),
     };
   }, [resources.settings.data]);

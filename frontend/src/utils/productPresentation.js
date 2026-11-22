@@ -35,21 +35,18 @@ export function isPriorityStockProduct(product) {
 export function getProductCardSpecifications(product) {
   if (!product) return [];
   const specifications = Array.isArray(product.specifications) ? product.specifications : [];
-  const model = displayableValue(
-    product.model
-      || product.model_number
-      || product.modelNumber
-      || specifications.find((specification) => /model/i.test(specification?.name || ""))?.value
-      || "",
-  );
-  const sku = displayableValue(product.sku);
+  const model = getProductField(product, specifications, "model", /^model(?:\s*(?:number|no\.?))?$/i);
+  const capacity = getProductField(product, specifications, "capacity", /^capacity$/i);
+  const capacityUnit = getProductField(product, specifications, "capacity_unit", /^(?:capacity\s*unit|unit)$/i);
+  const packing = getProductField(product, specifications, "packing", /^(?:packing|packing\s*\/\s*unit|unit\s*packing)$/i);
   const poleConfigurations = getPoleConfigurations(product);
   const details = [];
 
   if (model) details.push({ name: "Model", value: model });
-  else if (sku) details.push({ name: "SKU", value: sku });
-  const size = displayableValue(product.size);
-  if (size) details.push({ name: "Size / specification", value: size });
+  if (capacity) details.push({ name: "Capacity", value: [capacity, capacityUnit].filter(Boolean).join(" ") });
+  const size = displayableValue(product.size || product.size_rating);
+  if (size) details.push({ name: "Size / Rating", value: size });
+  if (packing) details.push({ name: "Packing", value: packing });
   if (poleConfigurations.length) {
     details.push({ name: "Available pole configurations", value: poleConfigurations.join(" / ") });
   }
@@ -58,9 +55,10 @@ export function getProductCardSpecifications(product) {
     const name = String(specification?.name || "").trim();
     const value = displayableValue(specification?.value);
     if (!name || !value) continue;
-    if (/model/i.test(name) && value === model) continue;
-    if (/^sku$/i.test(name) && sku.toLowerCase() === value.toLowerCase()) continue;
-    if (/^size(?:\s*\/\s*specification)?$/i.test(name) && size.toLowerCase() === value.toLowerCase()) continue;
+    if (/^model(?:\s*(?:number|no\.?)?)?$/i.test(name) && value === model) continue;
+    if (/^capacity(?:\s*unit)?$/i.test(name)) continue;
+    if (/^(?:packing|packing\s*\/\s*unit|unit\s*packing)$/i.test(name) && value === packing) continue;
+    if (/^(?:size(?:\s*\/\s*(?:specification|rating))?|rating)$/i.test(name) && size.toLowerCase() === value.toLowerCase()) continue;
     if (/^pole configuration$/i.test(name) && poleConfigurations.length) {
       const options = value.split(/[\/,|]/).map((option) => option.trim().toUpperCase());
       if (options.join("|") === poleConfigurations.join("|")) continue;
@@ -75,31 +73,36 @@ export function getProductDetailSpecifications(product) {
   if (!product) return [];
   const specifications = Array.isArray(product.specifications) ? product.specifications : [];
   const rows = [];
-  const model = displayableValue(
-    product.model
-      || product.model_number
-      || product.modelNumber
-      || specifications.find((specification) => /model/i.test(specification?.name || ""))?.value
-      || "",
-  );
-
-  const sku = displayableValue(product.sku);
-  const size = displayableValue(product.size);
-  if (sku) rows.push({ key: "sku", name: "SKU", value: sku });
+  const model = getProductField(product, specifications, "model", /^model(?:\s*(?:number|no\.?))?$/i);
+  const capacity = getProductField(product, specifications, "capacity", /^capacity$/i);
+  const capacityUnit = getProductField(product, specifications, "capacity_unit", /^(?:capacity\s*unit|unit)$/i);
+  const packing = getProductField(product, specifications, "packing", /^(?:packing|packing\s*\/\s*unit|unit\s*packing)$/i);
+  const size = displayableValue(product.size || product.size_rating);
   if (model) rows.push({ key: "model", name: "Model", value: model });
-  if (size) rows.push({ key: "size", name: "Size / specification", value: size });
+  if (capacity) rows.push({ key: "capacity", name: "Capacity", value: [capacity, capacityUnit].filter(Boolean).join(" ") });
+  if (size) rows.push({ key: "size", name: "Size / Rating", value: size });
+  if (packing) rows.push({ key: "packing", name: "Packing", value: packing });
 
   specifications.forEach((specification, index) => {
     const name = String(specification?.name || "").trim();
     const value = displayableValue(specification?.value);
     if (!name || !value) return;
-    if (/^sku$/i.test(name) && sku.toLowerCase() === value.toLowerCase()) return;
-    if (/model/i.test(name) && model.toLowerCase() === value.toLowerCase()) return;
-    if (/^size(?:\s*\/\s*specification)?$/i.test(name) && size.toLowerCase() === value.toLowerCase()) return;
+    if (/^model(?:\s*(?:number|no\.?)?)?$/i.test(name) && value === model) return;
+    if (/^capacity(?:\s*unit)?$/i.test(name)) return;
+    if (/^(?:packing|packing\s*\/\s*unit|unit\s*packing)$/i.test(name) && value === packing) return;
+    if (/^(?:size(?:\s*\/\s*(?:specification|rating))?|rating)$/i.test(name) && size.toLowerCase() === value.toLowerCase()) return;
     rows.push({ key: specification.id || `${name}-${index}`, name, value });
   });
 
   return rows;
+}
+
+function getProductField(product, specifications, key, pattern) {
+  return displayableValue(
+    product?.[key]
+      || specifications.find((specification) => pattern.test(String(specification?.name || "")))?.value
+      || "",
+  );
 }
 
 export function getProductImagePaths(product) {
@@ -114,6 +117,6 @@ function isEnabled(value) {
 
 function displayableValue(value) {
   const normalized = String(value || "").trim();
-  if (/^(?:n\/?a|not available|ask for available models|contact for specification)$/i.test(normalized)) return "";
+  if (/^(?:n\/?a|not available|ask for available models|multiple models|multiple capacities|contact for specification)$/i.test(normalized)) return "";
   return normalized;
 }

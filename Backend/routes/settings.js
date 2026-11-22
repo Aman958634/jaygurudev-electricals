@@ -7,7 +7,15 @@ import { logAdminActivity } from '../services/activityLog.js';
 const router = Router();
 const businessName = 'JAY GURUDEV ELECTRIICALS';
 const businessHours = 'Monday – Saturday · 8:00 AM – 8:00 PM · Sunday: CLOSED';
+const businessAddress = 'Guruttech House, Deep Glass & Hardware wali gali, opp. Jilla Panchayat, Dhundhiyawadi, Palanpur, Gujarat 385001';
 const canonicalSettings = { name: businessName, hours: businessHours };
+
+function isLegacyShopAddress(address) {
+  const normalized = String(address || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  return !normalized
+    || normalized.includes('gurutekhouselane')
+    || normalized.startsWith('oppjillapanchayatpalanpur');
+}
 
 function normalizeSettingRows(rows) {
   return rows.map((row) => Object.hasOwn(canonicalSettings, row.key_name)
@@ -28,7 +36,11 @@ router.get('/', async (req, res, next) => {
        ORDER BY key_name ASC`,
       publicKeys,
     );
-    const normalizedRows = normalizeSettingRows(rows);
+    const normalizedRows = normalizeSettingRows(rows).map((row) => (
+      row.key_name === 'address' && isLegacyShopAddress(row.key_value)
+        ? { ...row, key_value: businessAddress }
+        : row
+    ));
     const settings = {
       ...Object.fromEntries(normalizedRows.map(({ key_name, key_value }) => [key_name, key_value])),
       ...canonicalSettings,

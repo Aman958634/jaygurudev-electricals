@@ -4,7 +4,7 @@ import { query, queryOne } from '../config/db.js';
 import slugify from '../utils/slugify.js';
 import { upload, validateImageContent } from '../middleware/upload.js';
 import { requireAuth } from '../middleware/auth.js';
-import { toFrontendProduct } from '../utils/productResponse.js';
+import { mergePresentationSpecifications, toFrontendProduct } from '../utils/productResponse.js';
 import { logAdminActivity } from '../services/activityLog.js';
 
 const router = Router();
@@ -247,7 +247,7 @@ router.post('/', requireAuth, upload.array('images', 12), validateImageContent, 
         parseBooleanFlag(payload.is_best_selling) ?? 0,
         parseBooleanFlag(payload.is_active) ?? 1,
         payload.badge || null,
-        payload.size || null,
+        payload.size_rating || payload.size || null,
         payload.image || null,
         payload.meta_title || null,
         payload.meta_description || null,
@@ -265,7 +265,7 @@ router.post('/', requireAuth, upload.array('images', 12), validateImageContent, 
       await query('INSERT INTO product_images (product_id, image_path, is_primary, display_order) VALUES (?, ?, ?, ?)', [productId, payload.image, 1, 0]);
     }
 
-    const specificationEntries = parseSpecifications(payload.specifications) || [];
+    const specificationEntries = mergePresentationSpecifications(parseSpecifications(payload.specifications) || [], payload);
     for (const spec of specificationEntries) {
       if (!spec || !spec.name || !spec.value) continue;
       await query('INSERT INTO product_specifications (product_id, name, value) VALUES (?, ?, ?)', [productId, String(spec.name), String(spec.value)]);
@@ -327,7 +327,7 @@ router.put('/:id', requireAuth, upload.array('images', 12), validateImageContent
       is_best_selling: parseBooleanFlag(payload.is_best_selling),
       is_active: parseBooleanFlag(payload.is_active),
       badge: payload.badge,
-      size: payload.size,
+      size: payload.size_rating ?? payload.size,
       image: payload.image,
       meta_title: payload.meta_title,
       meta_description: payload.meta_description,
@@ -349,10 +349,16 @@ router.put('/:id', requireAuth, upload.array('images', 12), validateImageContent
       await query(`UPDATE products SET ${updates.join(', ')} WHERE id = ?`, values);
     }
 
+    const presentationFieldNames = ['model', 'capacity', 'capacity_unit', 'size_rating', 'packing'];
+    const hasPresentationFields = presentationFieldNames.some((field) => req.body[field] !== undefined);
     const specificationEntries = parseSpecifications(req.body.specifications);
-    if (specificationEntries !== undefined) {
+    if (specificationEntries !== undefined || hasPresentationFields) {
+      const existingSpecifications = specificationEntries === undefined
+        ? await query('SELECT name, value FROM product_specifications WHERE product_id = ?', [req.params.id])
+        : specificationEntries;
+      const mergedSpecifications = mergePresentationSpecifications(existingSpecifications, req.body);
       await query('DELETE FROM product_specifications WHERE product_id = ?', [req.params.id]);
-      for (const spec of specificationEntries) {
+      for (const spec of mergedSpecifications) {
         if (!spec || !spec.name || !spec.value) continue;
         await query('INSERT INTO product_specifications (product_id, name, value) VALUES (?, ?, ?)', [req.params.id, String(spec.name), String(spec.value)]);
       }

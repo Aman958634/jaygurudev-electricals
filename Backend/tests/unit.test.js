@@ -1,11 +1,33 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import slugify from '../utils/slugify.js';
-import { toFrontendProduct } from '../utils/productResponse.js';
+import { mergePresentationSpecifications, toFrontendProduct } from '../utils/productResponse.js';
 
 test('slugify normalizes readable category and product names', () => {
   assert.equal(slugify('Switches & Sockets'), 'switches-and-sockets');
   assert.equal(slugify('  LED   Panel Light '), 'led-panel-light');
+});
+
+test('product response exposes stored model, capacity, unit, rating and packing without a migration', () => {
+  const product = toFrontendProduct(
+    { id: 2, name: 'Washing Machine', size: null },
+    [],
+    [
+      { name: 'Model', value: 'WA70' },
+      { name: 'Capacity', value: '7' },
+      { name: 'Capacity unit', value: 'kg' },
+      { name: 'Size / Rating', value: 'Top load' },
+      { name: 'Packing', value: '1 unit' },
+    ],
+  );
+  assert.deepEqual(
+    { model: product.model, capacity: product.capacity, capacity_unit: product.capacity_unit, size_rating: product.size_rating, packing: product.packing },
+    { model: 'WA70', capacity: '7', capacity_unit: 'kg', size_rating: 'Top load', packing: '1 unit' },
+  );
+  assert.deepEqual(
+    mergePresentationSpecifications([{ name: 'Other', value: 'Keep' }], { model: 'WA70', capacity: '7', capacity_unit: 'kg' }),
+    [{ name: 'Other', value: 'Keep' }, { name: 'Model', value: 'WA70' }, { name: 'Capacity', value: '7' }, { name: 'Capacity unit', value: 'kg' }],
+  );
 });
 
 test('product response matches existing frontend card fields and primary image', () => {

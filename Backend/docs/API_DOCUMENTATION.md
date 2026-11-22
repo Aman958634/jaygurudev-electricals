@@ -110,9 +110,9 @@ Example:
     "phone": "+91 99744 91814",
     "phoneDigits": "919974491814",
     "email": "jaygurudevelectricals@gmail.com",
-    "address": "Opp. Jilla Panchayat, Palanpur, Gujarat",
+    "address": "Guruttech House, Deep Glass & Hardware wali gali, opp. Jilla Panchayat, Dhundhiyawadi, Palanpur, Gujarat 385001",
     "hours": "Monday – Saturday · 8:00 AM – 8:00 PM · Sunday: CLOSED",
-    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=Opp.+Jilla+Panchayat%2C+Palanpur%2C+Gujarat",
+    "mapsUrl": "https://maps.app.goo.gl/NL2bw3WzfQ1qpomT9?g_st=aw",
     "socialFacebook": null,
     "socialInstagram": null,
     "socialYouTube": null,
@@ -123,9 +123,9 @@ Example:
     "phone": "+91 99744 91814",
     "phoneDigits": "919974491814",
     "email": "jaygurudevelectricals@gmail.com",
-    "address": "Opp. Jilla Panchayat, Palanpur, Gujarat",
+    "address": "Guruttech House, Deep Glass & Hardware wali gali, opp. Jilla Panchayat, Dhundhiyawadi, Palanpur, Gujarat 385001",
     "hours": "Monday – Saturday · 8:00 AM – 8:00 PM · Sunday: CLOSED",
-    "mapsUrl": "https://www.google.com/maps/search/?api=1&query=Opp.+Jilla+Panchayat%2C+Palanpur%2C+Gujarat"
+    "mapsUrl": "https://maps.app.goo.gl/NL2bw3WzfQ1qpomT9?g_st=aw"
   },
   "data": [
     { "key_name": "name", "key_value": "JAY GURUDEV ELECTRIICALS", "description": "Business display name" }

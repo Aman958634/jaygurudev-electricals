@@ -6,6 +6,8 @@ import { useSiteData } from "../../context/SiteDataContext.jsx";
 import ResourceFeedback from "../common/ResourceFeedback.jsx";
 import { normalizeBusinessCopy } from "../../utils/branding.js";
 import { useEnquiry } from "../../context/EnquiryContext.jsx";
+import { getRetailEnquiryMessage, getWhatsAppUrl } from "../../utils/whatsapp.js";
+import WhatsAppIcon from "../common/WhatsAppIcon.jsx";
 
 const assurances = [
   { icon: BadgeCheck, label: "Electricals" },
@@ -24,7 +26,6 @@ export default function Hero() {
   );
   return (
     <section className="hero-section" id="home">
-      <div className="hero-glow" aria-hidden="true" />
       <div className="container hero-layout">
         <div className="hero-copy">
           <span className="hero-kicker"><span className="kicker-dot" /> {t("Trusted electrical destination in Palanpur")}</span>
@@ -35,20 +36,27 @@ export default function Hero() {
           </div>
           <div className="hero-actions">
             <Button type="button" onClick={openDealerQuotation}>
-              <FileText size={17} aria-hidden="true" /> {t("Get Dealer Quotation")} <ArrowRight size={17} />
+              <FileText size={15} aria-hidden="true" /> {t("Get Dealer Quotation")} <ArrowRight size={15} />
             </Button>
-            <Button to="/contact" variant="light"><MapPinIcon /> {t("Visit Our Showroom")} <ArrowRight size={17} /></Button>
+            <Button className="button-whatsapp" href={getWhatsAppUrl(getRetailEnquiryMessage(business), business)} target="_blank" rel="noreferrer">
+              <WhatsAppIcon className="whatsapp-icon whatsapp-icon--inverse" /> {t("Ask Price & Stock on WhatsApp")}
+            </Button>
+            <Button to="/contact" variant="light"><MapPinIcon /> {t("Visit Our Showroom")} <ArrowRight size={15} /></Button>
           </div>
           <div className="hero-statistics" aria-label={t("Customer trust and experience")}>
-            {displayedStatistics.map((statistic) => (
-              <div className="hero-stat" key={statistic.metric_key}>
+            {displayedStatistics.map((statistic) => {
+              const isGoogleStatistic = ["google_rating", "happy_reviews"].includes(statistic.metric_key);
+              const Statistic = isGoogleStatistic ? "a" : "div";
+              return (
+              <Statistic className={`hero-stat${isGoogleStatistic ? " hero-stat--google" : ""}`} key={statistic.metric_key} {...(isGoogleStatistic ? { href: business.mapsUrl, target: "_blank", rel: "noopener noreferrer", "aria-label": `${statistic.label}: ${statistic.metric_value}. Open the Google Business listing.` } : {})}>
                 <strong>{statistic.metric_value} {statistic.metric_key === "google_rating" && <Star size={15} fill="currentColor" aria-hidden="true" />}</strong>
                 <span>{t(statistic.label)}</span>
-              </div>
-            ))}
+              </Statistic>
+              );
+            })}
           </div>
           {statistics.error && <ResourceFeedback error={statistics.error} onRetry={() => refresh("statistics")} />}
-          <a className="hero-location" href={business.mapsUrl} target="_blank" rel="noreferrer">
+          <a className="hero-location" href={business.mapsUrl} target="_blank" rel="noopener noreferrer">
             {business.address} <span aria-hidden="true">↗</span>
           </a>
           {pages.error && <ResourceFeedback error={pages.error} onRetry={() => refresh("pages")} />}

@@ -299,7 +299,7 @@ The home page includes these sections in order:
 ### Contact page workflow
 
 - user reaches `ContactSection` and can call, email or WhatsApp
-- user can use Google Maps to reach the physical location: `Opp. Jilla Panchayat, Palanpur, Gujarat`
+- user can use Google Maps to reach the physical location: `Guruttech House, Deep Glass & Hardware wali gali, opp. Jilla Panchayat, Dhundhiyawadi, Palanpur, Gujarat 385001`
 
 ### Enquiry workflow
 

@@ -48,7 +48,7 @@ export default function Footer() {
           <a href={`tel:${business.phone.replace(/\s/g, "")}`}><Phone size={16} /> {business.phone}</a>
           <a href={getWhatsAppUrl(undefined, business)} target="_blank" rel="noreferrer"><WhatsAppIcon className="whatsapp-icon" /> {t("WhatsApp us")}</a>
           <a href={`mailto:${business.email}`}><Mail size={16} /> {business.email}</a>
-          <a href={business.mapsUrl} target="_blank" rel="noreferrer"><MapPin size={16} /> {business.address}</a>
+          <a href={business.mapsUrl} target="_blank" rel="noopener noreferrer"><MapPin size={16} /> {business.address}</a>
           <span>{t(business.hours)}</span>
           {socialLinks.length > 0 && <div className="footer-social-links" aria-label={t("Social media links")}>
             {socialLinks.map(({ label, Icon, url }) => <a key={label} href={url} target="_blank" rel="noopener noreferrer" aria-label={label}>{label === "WhatsApp" ? <Icon className="whatsapp-icon" /> : <Icon size={17} />}</a>)}

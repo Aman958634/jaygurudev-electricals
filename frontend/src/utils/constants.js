@@ -1,13 +1,16 @@
 import { BUSINESS_NAME } from "./branding.js";
 
+export const SHOP_MAPS_URL = "https://maps.app.goo.gl/NL2bw3WzfQ1qpomT9?g_st=aw";
+export const SHOP_ADDRESS = "Guruttech House, Deep Glass & Hardware wali gali, opp. Jilla Panchayat, Dhundhiyawadi, Palanpur, Gujarat 385001";
+
 export const BUSINESS = {
   name: BUSINESS_NAME,
   phone: "+91 99744 91814",
   phoneDigits: "919974491814",
   email: "jaygurudevelectricals@gmail.com",
-  address: "Gurutek House Lane, Opposite District Panchayat, Dhundhiyawadi, Palanpur – 385001, Gujarat, India",
+  address: SHOP_ADDRESS,
   hours: "Monday – Saturday · 8:00 AM – 8:00 PM · Sunday: CLOSED",
-  mapsUrl: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent("Gurutek House Lane, Opposite District Panchayat, Dhundhiyawadi, Palanpur 385001, Gujarat, India")}`,
+  mapsUrl: SHOP_MAPS_URL,
   googleReviewVerified: "false",
   googleRating: "",
   googleReviewCount: "",
@@ -15,10 +18,12 @@ export const BUSINESS = {
   catalogueUrl: "",
 };
 
-export const LEGACY_BUSINESS = {
-  address: "Opp. Jilla Panchayat, Palanpur, Gujarat",
-  mapsUrl: "https://www.google.com/maps/search/?api=1&query=Opp.+Jilla+Panchayat%2C+Palanpur%2C+Gujarat",
-};
+export function isLegacyShopAddress(address) {
+  const normalized = String(address || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  return !normalized
+    || normalized.includes("gurutekhouselane")
+    || normalized.startsWith("oppjillapanchayatpalanpur");
+}
 
 export function normalizeBusinessHours(hours) {
   const source = String(hours || BUSINESS.hours)

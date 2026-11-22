@@ -8,9 +8,8 @@ export default function Testimonials() {
   const { t } = useLanguage();
   const { business } = useSiteData();
   const googleReviewUrl = (() => {
-    if (business.googleReviewVerified !== "true") return null;
     try {
-      const url = new URL(business.googleReviewUrl);
+      const url = new URL(business.googleReviewUrl || business.mapsUrl);
       return url.protocol === "https:" ? url.href : null;
     } catch {
       return null;

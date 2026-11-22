@@ -1,5 +1,6 @@
 import { Clock3, Mail, MapPin, Phone, ArrowUpRight } from "lucide-react";
 import { getWhatsAppUrl } from "../../utils/whatsapp.js";
+import { getGoogleMapsAddressSearchUrl } from "../../utils/maps.js";
 import SectionTitle from "../common/SectionTitle.jsx";
 import WhatsAppIcon from "../common/WhatsAppIcon.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
@@ -18,7 +19,7 @@ export default function ContactSection() {
         {settings.error && <ResourceFeedback error={settings.error} onRetry={() => refresh("settings")} />}
         <div className="contact-layout">
           <div className="contact-details">
-            <a className="contact-card" href={business.mapsUrl} target="_blank" rel="noreferrer">
+            <a className="contact-card" href={business.mapsUrl} target="_blank" rel="noopener noreferrer">
               <span className="contact-icon"><MapPin size={21} /></span><span><small>{t("Find our showroom")}</small><strong>{business.address}</strong><em>{t("Get directions")} <ArrowUpRight size={14} /></em></span>
             </a>
             <a className="contact-card" href={`tel:${business.phone.replace(/\s/g, "")}`}>
@@ -34,7 +35,10 @@ export default function ContactSection() {
           </div>
           <div className="map-frame">
             <iframe title={t("Map showing the area near JAY GURUDEV ELECTRIICALS, Palanpur")} src={`https://maps.google.com/maps?q=${encodeURIComponent(business.address)}&output=embed`} loading="lazy" referrerPolicy="no-referrer-when-downgrade" />
-            <a className="map-label" href={business.mapsUrl} target="_blank" rel="noreferrer"><MapPin size={17} /><span><strong>{business.name}</strong><small>{business.address}</small></span><ArrowUpRight size={17} /></a>
+            <a className="map-label" href={business.mapsUrl} target="_blank" rel="noopener noreferrer"><MapPin size={17} /><span><strong>{business.name}</strong><small>{business.address}</small></span><ArrowUpRight size={17} /></a>
+            <a className="map-search-fallback" href={getGoogleMapsAddressSearchUrl(business.address)} target="_blank" rel="noopener noreferrer">
+              {t("Search address on Google Maps")} <ArrowUpRight size={14} />
+            </a>
           </div>
         </div>
       </div>

@@ -119,7 +119,11 @@ const translations = {
     "No matching catalogue record or specifications are listed.": "कैटलॉग में मेल खाता रिकॉर्ड या विवरण सूचीबद्ध नहीं है।",
     "Checking catalogue details…": "कैटलॉग विवरण जाँचा जा रहा है…",
     "Catalogue details could not be loaded.": "कैटलॉग विवरण लोड नहीं हो सका।",
+    Brand: "ब्रांड",
     Model: "मॉडल",
+    Capacity: "क्षमता",
+    "Size / Rating": "आकार / रेटिंग",
+    Packing: "पैकिंग",
     "Clear Enquiry List": "पूछताछ सूची साफ़ करें",
     "Add another": "एक और जोड़ें",
     "I sent it - clear enquiry list": "मैंने भेज दिया - पूछताछ सूची साफ़ करें",
@@ -250,7 +254,6 @@ const translations = {
     "A local destination for electrical essentials and home appliances.": "इलेक्ट्रिकल ज़रूरतों और घरेलू उपकरणों के लिए आपका स्थानीय ठिकाना।",
     "Come say hello": "हमसे मिलने आएँ",
     "Let's find what your space needs.": "आपकी जगह की ज़रूरतें खोजें।",
-    "Visit us opposite District Panchayat in Palanpur, or reach out before your visit.": "पालनपुर में जिला पंचायत के सामने आएँ या आने से पहले संपर्क करें।",
     "Visit & contact details": "पता और संपर्क जानकारी",
     "Message us": "संदेश भेजें",
     "Names you know": "जाने-पहचाने नाम",
@@ -452,7 +455,11 @@ const translations = {
     "No matching catalogue record or specifications are listed.": "કૅટલૉગમાં મેળ ખાતો રેકોર્ડ અથવા વિશિષ્ટતાઓ સૂચિબદ્ધ નથી.",
     "Checking catalogue details…": "કૅટલૉગની વિગતો તપાસી રહ્યા છીએ…",
     "Catalogue details could not be loaded.": "કૅટલૉગની વિગતો લોડ થઈ શકી નથી.",
+    Brand: "બ્રાન્ડ",
     Model: "મોડેલ",
+    Capacity: "ક્ષમતા",
+    "Size / Rating": "માપ / રેટિંગ",
+    Packing: "પેકિંગ",
     "Clear Enquiry List": "પૂછપરછની યાદી સાફ કરો",
     "Add another": "બીજી ઉમેરો",
     "I sent it - clear enquiry list": "મેં મોકલી દીધું - પૂછપરછની યાદી સાફ કરો",
@@ -582,7 +589,6 @@ const translations = {
     "A local destination for electrical essentials and home appliances.": "ઇલેક્ટ્રિકલ જરૂરિયાતો અને ઘરગથ્થુ ઉપકરણો માટેનું તમારું સ્થાનિક સ્થળ.",
     "Come say hello": "મળવા જરૂર આવજો",
     "Let's find what your space needs.": "તમારી જગ્યાને શું જોઈએ તે શોધીએ.",
-    "Visit us opposite District Panchayat in Palanpur, or reach out before your visit.": "પાલનપુરમાં જિલ્લા પંચાયતની સામે મુલાકાત લો અથવા આવતાં પહેલાં સંપર્ક કરો.",
     "Visit & contact details": "મુલાકાત અને સંપર્કની વિગતો",
     "Message us": "મેસેજ કરો",
     "Names you know": "જાણીતા નામો",
@@ -675,6 +681,7 @@ export function LanguageProvider({ children }) {
 
   useEffect(() => {
     document.documentElement.lang = language;
+    document.documentElement.dataset.language = language;
   }, [language]);
 
   const value = useMemo(() => ({

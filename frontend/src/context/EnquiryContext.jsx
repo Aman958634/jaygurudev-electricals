@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { getProductCardSpecifications } from "../utils/productPresentation.js";
 
 const STORAGE_KEY = "jay-gurudev-enquiry-list-v1";
 const EnquiryContext = createContext(null);
@@ -82,7 +83,10 @@ function toEnquiryItem(product, variant, variantOptions, quantity = 1) {
     sku: String(product.sku || "").trim(),
     image: String(product.image || product.image_url || ""),
     brand: String(product.brand || ""),
-    details: String(product.size || product.short_description || product.description || ""),
+    details: getProductCardSpecifications(product)
+      .filter(({ name }) => ["Capacity", "Size / Rating", "Packing"].includes(name))
+      .map(({ name, value }) => `${name}: ${value}`)
+      .join("; ") || String(product.short_description || product.description || ""),
     variant,
     variantOptions,
     quantity,
