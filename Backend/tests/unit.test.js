@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import slugify from '../utils/slugify.js';
 import { mergePresentationSpecifications, toFrontendProduct } from '../utils/productResponse.js';
+import { productInsertValues, productNewestOrder } from '../utils/productOrdering.js';
 
 test('slugify normalizes readable category and product names', () => {
   assert.equal(slugify('Switches & Sockets'), 'switches-and-sockets');
@@ -46,4 +47,19 @@ test('product response matches existing frontend card fields and primary image',
   );
   assert.equal(product.price, null);
   assert.equal(product.specifications[0].value, '9W');
+});
+
+test('product SQL fallback does not reference display_order when an older schema lacks it', () => {
+  const payload = {
+    name: 'Legacy-compatible product', slug: 'legacy-compatible-product', sku: 'LEGACY-1', description: null,
+    short_description: null, category_id: null, brand_id: null, price: null, price_on_request: 0, stock_status: 'in_stock',
+    is_featured: 0, is_best_selling: 0, display_order: 42, is_active: 1, badge: null, size: null, image: null,
+    meta_title: null, meta_description: null,
+  };
+  const insert = productInsertValues(payload, false);
+  assert.equal(productNewestOrder(false), 'p.created_at DESC, p.id DESC');
+  assert.equal(insert.columns.includes('display_order'), false);
+  assert.equal(insert.values.includes(42), false);
+  assert.match(productNewestOrder(true), /p\.display_order ASC/);
+  assert.equal(productInsertValues(payload, true).columns.includes('display_order'), true);
 });

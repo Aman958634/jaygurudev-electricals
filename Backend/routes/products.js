@@ -6,6 +6,8 @@ import { upload, validateImageContent } from '../middleware/upload.js';
 import { requireAuth } from '../middleware/auth.js';
 import { mergePresentationSpecifications, toFrontendProduct } from '../utils/productResponse.js';
 import { logAdminActivity } from '../services/activityLog.js';
+import { hasProductDisplayOrder } from '../utils/productSchema.js';
+import { productInsertValues, productNewestOrder } from '../utils/productOrdering.js';
 
 const router = Router();
 
@@ -46,6 +48,7 @@ router.get('/', async (req, res, next) => {
     const featured = req.query.featured === 'true';
     const bestSelling = req.query.best_selling === 'true';
     const sort = String(req.query.sort || 'newest');
+    const hasDisplayOrder = await hasProductDisplayOrder();
 
     let sql = `
       SELECT p.*, c.name AS category_name, c.slug AS category_slug, b.name AS brand_name, b.logo_url AS brand_logo_url
@@ -81,7 +84,7 @@ router.get('/', async (req, res, next) => {
     }
 
     const sortMap = {
-      newest: 'p.display_order ASC, p.created_at DESC',
+      newest: productNewestOrder(hasDisplayOrder),
       name_asc: 'p.name ASC',
       name_desc: 'p.name DESC',
       price_asc: 'p.price ASC',
@@ -206,6 +209,7 @@ router.post('/', requireAuth, upload.array('images', 12), validateImageContent, 
     }
 
     const payload = req.body;
+    const hasDisplayOrder = await hasProductDisplayOrder();
     const name = String(payload.name || '').trim();
     const categoryId = payload.category_id ? Number(payload.category_id) : null;
     const brandId = payload.brand_id ? Number(payload.brand_id) : null;
@@ -228,32 +232,30 @@ router.post('/', requireAuth, upload.array('images', 12), validateImageContent, 
       return res.status(409).json({ success: false, message: 'Product slug or SKU already exists.' });
     }
 
+    const insert = productInsertValues({
+      name,
+      slug: productSlug,
+      sku: safeSku,
+      description: payload.description || null,
+      short_description: payload.short_description || null,
+      category_id: categoryId,
+      brand_id: brandId,
+      price,
+      price_on_request: priceOnRequest,
+      stock_status: stockStatus,
+      is_featured: parseBooleanFlag(payload.is_featured) ?? 0,
+      is_best_selling: parseBooleanFlag(payload.is_best_selling) ?? 0,
+      display_order: payload.display_order,
+      is_active: parseBooleanFlag(payload.is_active) ?? 1,
+      badge: payload.badge || null,
+      size: payload.size || payload.size_rating || null,
+      image: payload.image || null,
+      meta_title: payload.meta_title || null,
+      meta_description: payload.meta_description || null,
+    }, hasDisplayOrder);
     const created = await query(
-      `INSERT INTO products (
-        name, slug, sku, description, short_description, category_id, brand_id, price, price_on_request,
-        stock_status, is_featured, is_best_selling, display_order, is_active, badge, size, image, meta_title, meta_description
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [
-        name,
-        productSlug,
-        safeSku,
-        payload.description || null,
-        payload.short_description || null,
-        categoryId,
-        brandId,
-        price,
-        priceOnRequest,
-        stockStatus,
-        parseBooleanFlag(payload.is_featured) ?? 0,
-        parseBooleanFlag(payload.is_best_selling) ?? 0,
-        Number(payload.display_order ?? 0),
-        parseBooleanFlag(payload.is_active) ?? 1,
-        payload.badge || null,
-        payload.size || payload.size_rating || null,
-        payload.image || null,
-        payload.meta_title || null,
-        payload.meta_description || null,
-      ],
+      `INSERT INTO products (${insert.columns.join(', ')}) VALUES (${insert.columns.map(() => '?').join(', ')})`,
+      insert.values,
     );
 
     const productId = created.insertId;
@@ -304,6 +306,7 @@ router.put('/:id', requireAuth, upload.array('images', 12), validateImageContent
     }
 
     const payload = req.body;
+    const hasDisplayOrder = await hasProductDisplayOrder();
     const categoryId = payload.category_id === undefined ? product.category_id : (payload.category_id ? Number(payload.category_id) : null);
     const brandId = payload.brand_id === undefined ? product.brand_id : (payload.brand_id ? Number(payload.brand_id) : null);
     if (categoryId && !(await queryOne('SELECT id FROM categories WHERE id = ?', [categoryId]))) {
@@ -328,7 +331,7 @@ router.put('/:id', requireAuth, upload.array('images', 12), validateImageContent
       stock_status: payload.stock_status,
       is_featured: parseBooleanFlag(payload.is_featured),
       is_best_selling: parseBooleanFlag(payload.is_best_selling),
-      display_order: payload.display_order,
+      display_order: hasDisplayOrder ? payload.display_order : undefined,
       is_active: parseBooleanFlag(payload.is_active),
       badge: payload.badge,
       size: payload.size ?? payload.size_rating,
