@@ -4,7 +4,7 @@ import { useLanguage } from "../../context/LanguageContext.jsx";
 import showroom from "../../assets/images/reference-showroom-hero.webp";
 import { useSiteData } from "../../context/SiteDataContext.jsx";
 import ResourceFeedback from "../common/ResourceFeedback.jsx";
-import { normalizeBusinessCopy } from "../../utils/branding.js";
+import { getHeroContent } from "../../utils/pageContent.js";
 import { useEnquiry } from "../../context/EnquiryContext.jsx";
 import { getRetailEnquiryMessage, getWhatsAppUrl } from "../../utils/whatsapp.js";
 import WhatsAppIcon from "../common/WhatsAppIcon.jsx";
@@ -18,9 +18,12 @@ const assurances = [
 
 export default function Hero() {
   const { language, t } = useLanguage();
-  const { business, pages, statistics, refresh } = useSiteData();
+  const { business, homePage, pages, statistics, refresh } = useSiteData();
   const { openDealerQuotation } = useEnquiry();
-  const homePage = pages.data.find((item) => item.slug === "home");
+  const savedHomePage = !Array.isArray(homePage.data) && homePage.data
+    ? homePage.data
+    : pages.data.find((item) => item.slug === "home");
+  const heroContent = getHeroContent(savedHomePage);
   const displayedStatistics = statistics.data.filter((statistic) =>
     ["google_rating", "happy_reviews", "years_of_service"].includes(statistic.metric_key),
   );
@@ -29,8 +32,8 @@ export default function Hero() {
       <div className="container hero-layout">
         <div className="hero-copy">
           <span className="hero-kicker"><span className="kicker-dot" /> {t("Trusted electrical destination in Palanpur")}</span>
-          <h1>{normalizeBusinessCopy(homePage?.title || "JAY GURUDEV")}<br /><span>{normalizeBusinessCopy(homePage?.heading || "ELECTRIICALS")}</span></h1>
-          <p className="hero-description" lang={language}>{t(homePage?.description || "Complete Electrical & Home Appliances under one roof — for your home, shop and project.")}</p>
+          <h1>{t(heroContent.title)}<br /><span>{t(heroContent.heading)}</span></h1>
+          <p className="hero-description" lang={language}>{t(heroContent.description)}</p>
           <div className="hero-assurances">
             {assurances.map(({ icon: Icon, label }) => <span key={label}><Icon size={17} /> {t(label)}</span>)}
           </div>
@@ -56,10 +59,11 @@ export default function Hero() {
             })}
           </div>
           {statistics.error && <ResourceFeedback error={statistics.error} onRetry={() => refresh("statistics")} />}
-          <a className="hero-location" href={business.mapsUrl} target="_blank" rel="noopener noreferrer">
+          <a className="hero-location" href={business.mapsDirectionsUrl || business.mapsUrl} target="_blank" rel="noopener noreferrer">
             {business.address} <span aria-hidden="true">↗</span>
           </a>
           {pages.error && <ResourceFeedback error={pages.error} onRetry={() => refresh("pages")} />}
+          {homePage.error && <ResourceFeedback error={homePage.error} onRetry={() => refresh("homePage")} />}
         </div>
         <div className="hero-visual">
           <img

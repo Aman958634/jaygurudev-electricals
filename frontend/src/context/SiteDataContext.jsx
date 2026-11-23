@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { apiRequest } from "../services/api.js";
-import { BUSINESS as DEFAULT_BUSINESS, isLegacyShopAddress, normalizeBusinessHours } from "../utils/constants.js";
-import { BUSINESS_NAME } from "../utils/branding.js";
+import { BUSINESS as DEFAULT_BUSINESS, isLegacyShopAddress } from "../utils/constants.js";
+import { formatBusinessHours, parseBusinessHours, phoneDigits, validUrl } from "../utils/businessSettings.js";
 
 const resourcePaths = {
   categories: "/categories",
@@ -9,6 +9,7 @@ const resourcePaths = {
   gallery: "/gallery",
   banners: "/banners",
   pages: "/pages/",
+  homePage: "/pages/home",
   settings: "/settings",
   statistics: "/statistics",
 };
@@ -28,7 +29,7 @@ export function SiteDataProvider({ children }) {
         ...current,
         [key]: { ...current[key], loading: true, error: null },
       }));
-      apiRequest(path, { signal: controller.signal })
+      apiRequest(path, { signal: controller.signal, cache: "no-store" })
         .then((response) => {
           setResources((current) => ({
             ...current,
@@ -62,14 +63,17 @@ export function SiteDataProvider({ children }) {
     return {
       ...DEFAULT_BUSINESS,
       ...configured,
-      name: BUSINESS_NAME,
       // A deployed settings row can still contain the retired showroom address.
       // Keep the public site correct until an administrator saves the canonical value.
       address: isLegacyShopAddress(configured.address) ? DEFAULT_BUSINESS.address : configured.address,
-      hours: normalizeBusinessHours(configured.hours),
-      // Public location links use the client-confirmed shop listing. The admin
-      // setting is preserved; it is not used to redirect customers elsewhere.
-      mapsUrl: DEFAULT_BUSINESS.mapsUrl,
+      name: configured.name || DEFAULT_BUSINESS.name,
+      phone: configured.phone || DEFAULT_BUSINESS.phone,
+      phoneDigits: phoneDigits(configured.phoneDigits || configured.phone, DEFAULT_BUSINESS.phoneDigits),
+      hours: configured.businessHours ? formatBusinessHours(parseBusinessHours(configured.businessHours, configured.hours)) : (configured.hours || DEFAULT_BUSINESS.hours),
+      businessHours: parseBusinessHours(configured.businessHours, configured.hours),
+      mapsUrl: validUrl(configured.mapsUrl) || DEFAULT_BUSINESS.mapsUrl,
+      mapsDirectionsUrl: validUrl(configured.mapsDirectionsUrl) || validUrl(configured.mapsUrl) || DEFAULT_BUSINESS.mapsUrl,
+      mapsEmbedUrl: validUrl(configured.mapsEmbedUrl),
       googleReviewVerified: String(configured.googleReviewVerified ?? DEFAULT_BUSINESS.googleReviewVerified).toLowerCase(),
     };
   }, [resources.settings.data]);
@@ -80,6 +84,7 @@ export function SiteDataProvider({ children }) {
     gallery: resources.gallery,
     banners: resources.banners,
     pages: resources.pages,
+    homePage: resources.homePage,
     settings: resources.settings,
     statistics: resources.statistics,
     business,

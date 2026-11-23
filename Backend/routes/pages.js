@@ -7,10 +7,21 @@ import { logAdminActivity } from '../services/activityLog.js';
 
 const router = Router();
 
+function toPageResponse(page) {
+  if (!page) return page;
+  return {
+    ...page,
+    // Stable public aliases make the page-title/content mapping explicit while
+    // retaining the existing database column names and API compatibility.
+    page_title: page.title,
+    content: page.description,
+  };
+}
+
 router.get('/', async (req, res, next) => {
   try {
     const rows = await query('SELECT * FROM pages WHERE is_active = 1 ORDER BY id ASC');
-    return res.json({ success: true, data: rows });
+    return res.json({ success: true, data: rows.map(toPageResponse) });
   } catch (error) {
     next(error);
   }
@@ -19,7 +30,7 @@ router.get('/', async (req, res, next) => {
 router.get('/admin/list', requireAuth, async (req, res, next) => {
   try {
     const pages = await query('SELECT * FROM pages ORDER BY id ASC');
-    return res.json({ success: true, data: pages });
+    return res.json({ success: true, data: pages.map(toPageResponse) });
   } catch (error) {
     return next(error);
   }
@@ -72,7 +83,7 @@ router.get('/:slug', async (req, res, next) => {
     const page = await queryOne('SELECT * FROM pages WHERE slug = ? AND is_active = 1', [req.params.slug]);
     if (!page) return res.status(404).json({ success: false, message: 'Page not found.' });
     const sections = await query('SELECT * FROM page_sections WHERE page_id = ? AND is_active = 1 ORDER BY display_order ASC', [page.id]);
-    return res.json({ success: true, data: { ...page, sections } });
+    return res.json({ success: true, data: { ...toPageResponse(page), sections } });
   } catch (error) {
     next(error);
   }

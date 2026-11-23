@@ -9,7 +9,7 @@ export default function Testimonials() {
   const { business } = useSiteData();
   const googleReviewUrl = (() => {
     try {
-      const url = new URL(business.googleReviewUrl || business.mapsUrl);
+      const url = new URL(business.googleReviewUrl || business.googleBusinessUrl || business.mapsUrl);
       return url.protocol === "https:" ? url.href : null;
     } catch {
       return null;

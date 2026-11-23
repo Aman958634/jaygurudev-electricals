@@ -40,6 +40,7 @@ try {
     ['brands', 'description', 'TEXT DEFAULT NULL AFTER category'],
     ['brands', 'display_order', 'INT NOT NULL DEFAULT 0 AFTER logo_url'],
     ['banners', 'button_text', 'VARCHAR(80) DEFAULT NULL AFTER description'],
+    ['products', 'display_order', 'INT NOT NULL DEFAULT 0 AFTER is_best_selling'],
   ]) {
     const [existingColumns] = await connection.execute(
       `SELECT COLUMN_NAME FROM information_schema.COLUMNS
@@ -89,6 +90,14 @@ try {
   );
   if (!skuIndexes.length) {
     await connection.query('ALTER TABLE products ADD UNIQUE KEY uq_product_sku (sku)');
+  }
+  const [productOrderIndexes] = await connection.execute(
+    `SELECT INDEX_NAME FROM information_schema.STATISTICS
+     WHERE TABLE_SCHEMA = ? AND TABLE_NAME = 'products' AND INDEX_NAME = 'idx_product_active_order'`,
+    [dbName],
+  );
+  if (!productOrderIndexes.length) {
+    await connection.query('ALTER TABLE products ADD INDEX idx_product_active_order (is_active, display_order, created_at)');
   }
   for (const unusedTable of ['navigation_menus', 'reviews', 'social_links', 'testimonials']) {
     const [existingTables] = await connection.execute(

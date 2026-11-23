@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Eye, EyeOff, KeyRound, LockKeyhole } from "lucide-react";
 import { adminRequest } from "./adminApi.js";
 import { BUSINESS_NAME } from "../utils/branding.js";
-import logo from "../assets/images/jay-gurudev-electricals-logo.png";
+import logo from "../assets/images/jay-gurudevv-logo.jpg";
 
 export default function AdminLogin({ onLogin, notice }) {
   const [busy, setBusy] = useState(false);

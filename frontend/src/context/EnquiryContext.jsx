@@ -84,7 +84,7 @@ function toEnquiryItem(product, variant, variantOptions, quantity = 1) {
     image: String(product.image || product.image_url || ""),
     brand: String(product.brand || ""),
     details: getProductCardSpecifications(product)
-      .filter(({ name }) => ["Capacity", "Size / Rating", "Packing"].includes(name))
+      .filter(({ name }) => ["Capacity", "Size", "Electrical rating", "Packing"].includes(name))
       .map(({ name, value }) => `${name}: ${value}`)
       .join("; ") || String(product.short_description || product.description || ""),
     variant,

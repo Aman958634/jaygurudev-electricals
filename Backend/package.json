@@ -12,6 +12,8 @@
     "init-db": "node database/init.js",
     "seed-admin": "node database/seed-admin.js",
     "seed-frontend-content": "node database/seed-frontend-content.js",
+    "audit:featured-products": "node database/audit-featured-products.js",
+    "audit:home-page": "node database/audit-home-page.js",
     "lint": "node scripts/lint.js",
     "test": "node --test",
     "test:integration": "node --test tests/integration.test.js"

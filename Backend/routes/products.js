@@ -81,7 +81,7 @@ router.get('/', async (req, res, next) => {
     }
 
     const sortMap = {
-      newest: 'p.created_at DESC',
+      newest: 'p.display_order ASC, p.created_at DESC',
       name_asc: 'p.name ASC',
       name_desc: 'p.name DESC',
       price_asc: 'p.price ASC',
@@ -196,6 +196,7 @@ router.post('/', requireAuth, upload.array('images', 12), validateImageContent, 
   body('stock_status').optional().isIn(['in_stock', 'out_of_stock', 'limited', 'price_on_request']),
   body('is_featured').optional().isBoolean(),
   body('is_best_selling').optional().isBoolean(),
+  body('display_order').optional().isInt({ min: 0 }),
   body('is_active').optional().isBoolean(),
 ], async (req, res, next) => {
   try {
@@ -230,8 +231,8 @@ router.post('/', requireAuth, upload.array('images', 12), validateImageContent, 
     const created = await query(
       `INSERT INTO products (
         name, slug, sku, description, short_description, category_id, brand_id, price, price_on_request,
-        stock_status, is_featured, is_best_selling, is_active, badge, size, image, meta_title, meta_description
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        stock_status, is_featured, is_best_selling, display_order, is_active, badge, size, image, meta_title, meta_description
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         name,
         productSlug,
@@ -245,9 +246,10 @@ router.post('/', requireAuth, upload.array('images', 12), validateImageContent, 
         stockStatus,
         parseBooleanFlag(payload.is_featured) ?? 0,
         parseBooleanFlag(payload.is_best_selling) ?? 0,
+        Number(payload.display_order ?? 0),
         parseBooleanFlag(payload.is_active) ?? 1,
         payload.badge || null,
-        payload.size_rating || payload.size || null,
+        payload.size || payload.size_rating || null,
         payload.image || null,
         payload.meta_title || null,
         payload.meta_description || null,
@@ -287,6 +289,7 @@ router.put('/:id', requireAuth, upload.array('images', 12), validateImageContent
   body('price_on_request').optional().isBoolean(),
   body('is_featured').optional().isBoolean(),
   body('is_best_selling').optional().isBoolean(),
+  body('display_order').optional().isInt({ min: 0 }),
   body('is_active').optional().isBoolean(),
 ], async (req, res, next) => {
   try {
@@ -325,9 +328,10 @@ router.put('/:id', requireAuth, upload.array('images', 12), validateImageContent
       stock_status: payload.stock_status,
       is_featured: parseBooleanFlag(payload.is_featured),
       is_best_selling: parseBooleanFlag(payload.is_best_selling),
+      display_order: payload.display_order,
       is_active: parseBooleanFlag(payload.is_active),
       badge: payload.badge,
-      size: payload.size_rating ?? payload.size,
+      size: payload.size ?? payload.size_rating,
       image: payload.image,
       meta_title: payload.meta_title,
       meta_description: payload.meta_description,
@@ -349,7 +353,7 @@ router.put('/:id', requireAuth, upload.array('images', 12), validateImageContent
       await query(`UPDATE products SET ${updates.join(', ')} WHERE id = ?`, values);
     }
 
-    const presentationFieldNames = ['model', 'capacity', 'capacity_unit', 'size_rating', 'packing'];
+    const presentationFieldNames = ['model', 'capacity', 'capacity_unit', 'size', 'rating', 'packing'];
     const hasPresentationFields = presentationFieldNames.some((field) => req.body[field] !== undefined);
     const specificationEntries = parseSpecifications(req.body.specifications);
     if (specificationEntries !== undefined || hasPresentationFields) {
@@ -365,10 +369,17 @@ router.put('/:id', requireAuth, upload.array('images', 12), validateImageContent
     }
 
     if (req.files && req.files.length) {
-      await query('DELETE FROM product_images WHERE product_id = ?', [req.params.id]);
+      const existingImages = await query(
+        'SELECT id, display_order FROM product_images WHERE product_id = ? ORDER BY display_order DESC, id DESC LIMIT 1',
+        [req.params.id],
+      );
+      const nextOrder = existingImages.length ? Number(existingImages[0].display_order) + 1 : 0;
       for (let index = 0; index < req.files.length; index += 1) {
         const file = req.files[index];
-        await query('INSERT INTO product_images (product_id, image_path, is_primary, display_order) VALUES (?, ?, ?, ?)', [req.params.id, `/uploads/${file.filename}`, index === 0 ? 1 : 0, index]);
+        await query(
+          'INSERT INTO product_images (product_id, image_path, is_primary, display_order) VALUES (?, ?, ?, ?)',
+          [req.params.id, `/uploads/${file.filename}`, existingImages.length === 0 && index === 0 ? 1 : 0, nextOrder + index],
+        );
       }
     }
 

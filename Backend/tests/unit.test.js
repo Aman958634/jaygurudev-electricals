@@ -16,13 +16,13 @@ test('product response exposes stored model, capacity, unit, rating and packing 
       { name: 'Model', value: 'WA70' },
       { name: 'Capacity', value: '7' },
       { name: 'Capacity unit', value: 'kg' },
-      { name: 'Size / Rating', value: 'Top load' },
+      { name: 'Electrical rating', value: 'Top load' },
       { name: 'Packing', value: '1 unit' },
     ],
   );
   assert.deepEqual(
-    { model: product.model, capacity: product.capacity, capacity_unit: product.capacity_unit, size_rating: product.size_rating, packing: product.packing },
-    { model: 'WA70', capacity: '7', capacity_unit: 'kg', size_rating: 'Top load', packing: '1 unit' },
+    { model: product.model, capacity: product.capacity, capacity_unit: product.capacity_unit, size: product.size, rating: product.rating, packing: product.packing },
+    { model: 'WA70', capacity: '7', capacity_unit: 'kg', size: '', rating: 'Top load', packing: '1 unit' },
   );
   assert.deepEqual(
     mergePresentationSpecifications([{ name: 'Other', value: 'Keep' }], { model: 'WA70', capacity: '7', capacity_unit: 'kg' }),

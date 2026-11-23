@@ -15,7 +15,7 @@ import AdminWebsiteSettings from "./AdminWebsiteSettings.jsx";
 import { resourceConfigs } from "./adminResources.js";
 import "./admin.css";
 import { BUSINESS_NAME } from "../utils/branding.js";
-import logo from "../assets/images/jay-gurudev-electricals-logo.png";
+import logo from "../assets/images/jay-gurudevv-logo.jpg";
 
 const navigation = [
   { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -26,6 +26,7 @@ const navigation = [
   { id: "banners", label: "Home banners", icon: Megaphone },
   { id: "enquiries", label: "Enquiries", icon: MessageSquareText },
   { id: "content", label: "Website content", icon: Building2 },
+  { id: "settings", label: "Website Settings", icon: Settings },
 ];
 
 function PasswordDialog({ token, onClose }) {
@@ -190,23 +191,11 @@ export default function AdminPanel() {
           {activeSection === "dashboard" && <AdminDashboard token={token} onNavigate={navigate} />}
           {resourceConfigs[activeSection] && <AdminResource key={activeSection} resource={activeSection} config={resourceConfigs[activeSection]} token={token} onChanged={onChanged} />}
           {activeSection === "enquiries" && <AdminEnquiries token={token} />}
-          {activeSection === "content" && <WebsiteContent token={token} onChanged={onChanged} />}
+          {activeSection === "content" && <AdminResource config={resourceConfigs.pages} resource="pages" token={token} onChanged={onChanged} />}
+          {activeSection === "settings" && <AdminWebsiteSettings token={token} onChanged={onChanged} />}
         </main>
       </div>
       {passwordOpen && <PasswordDialog token={token} onClose={() => setPasswordOpen(false)} />}
     </div>
   );
-}
-
-function WebsiteContent({ token, onChanged }) {
-  const [tab, setTab] = useState("pages");
-  return <>
-    <div className="admin-content-tabs" role="tablist" aria-label="Website content sections">
-      <button role="tab" aria-selected={tab === "pages"} className={tab === "pages" ? "is-active" : ""} onClick={() => setTab("pages")}>Pages & copy</button>
-      <button role="tab" aria-selected={tab === "settings"} className={tab === "settings" ? "is-active" : ""} onClick={() => setTab("settings")}>Business & social settings</button>
-    </div>
-    {tab === "pages"
-      ? <AdminResource config={resourceConfigs.pages} resource="pages" token={token} onChanged={onChanged} />
-      : <AdminWebsiteSettings token={token} onChanged={onChanged} />}
-  </>;
 }

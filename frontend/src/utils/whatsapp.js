@@ -15,7 +15,7 @@ export function getProductEnquiryMessage(product, business = BUSINESS, variant =
   const details = [
     product.brand && `Brand: ${product.brand}`,
     ...getProductCardSpecifications(product)
-      .filter(({ name }) => ["Model", "Capacity", "Size / Rating", "Packing"].includes(name))
+      .filter(({ name }) => ["Model", "Capacity", "Size", "Electrical rating", "Packing"].includes(name))
       .map(({ name, value }) => `${name}: ${value}`),
     variant && `Pole configuration: ${variant}`,
   ].filter(Boolean);

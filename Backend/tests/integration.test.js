@@ -237,6 +237,11 @@ test('public APIs, admin CRUD, enquiries, uploads, and auth work with MySQL', as
     slug: `integration-product-${Date.now()}`,
     sku: `TEST-${Date.now()}`,
     size: '9W / 12W',
+    model: 'LED-12W-TEST',
+    capacity: '12',
+    capacity_unit: 'W',
+    rating: '220V',
+    display_order: '7',
     badge: 'Lighting',
     is_featured: 'true',
     specifications: JSON.stringify([{ name: 'Wattage', value: '9W / 12W' }]),
@@ -247,21 +252,36 @@ test('public APIs, admin CRUD, enquiries, uploads, and auth work with MySQL', as
   assert.equal(productsList.data.length, 1);
   assert.equal(productsList.data[0].brand, brand.name);
   assert.equal(productsList.data[0].category, category.data.name);
+  assert.equal(productsList.data[0].model, 'LED-12W-TEST');
+  assert.equal(productsList.data[0].capacity, '12');
+  assert.equal(productsList.data[0].capacity_unit, 'W');
+  assert.equal(productsList.data[0].rating, '220V');
+  assert.equal(productsList.data[0].display_order, 7);
   assert.ok(productsList.data[0].image.startsWith('/uploads/'));
   uploadedFiles.add(productsList.data[0].image);
   assert.equal((await fetch(`${baseUrl}${productsList.data[0].image}`)).status, 200);
-  assert.equal(productsList.data[0].specifications[0].value, '9W / 12W');
+  assert.equal(productsList.data[0].specifications.find((specification) => specification.name === 'Wattage')?.value, '9W / 12W');
   assert.equal((await request('/api/products/featured/list', { auth: false })).data[0].id, productCreated.productId);
   assert.equal((await request('/api/products/admin/list')).data[0].id, productCreated.productId);
   await request(`/api/products/${productCreated.productId}`, {
     method: 'PUT',
-    body: { badge: 'Updated badge', is_active: true, is_featured: true, price_on_request: false },
+    body: { badge: 'Updated badge', size: '15W', rating: '240V', display_order: 3, is_active: true, is_featured: true, price_on_request: false },
   });
   const updatedProduct = (await request(`/api/products/${productCreated.productId}`, { auth: false })).data;
   assert.equal(updatedProduct.badge, 'Updated badge');
   assert.equal(updatedProduct.is_active, 1);
   assert.equal(updatedProduct.is_featured, 1);
   assert.equal(updatedProduct.price_on_request, 0);
+  assert.equal(updatedProduct.size, '15W');
+  assert.equal(updatedProduct.rating, '240V');
+  assert.equal(updatedProduct.display_order, 3);
+  await request(`/api/products/${productCreated.productId}`, { method: 'PUT', form: imageForm({}, 'images') });
+  const productWithAdditionalImage = (await request(`/api/products/${productCreated.productId}`, { auth: false })).data;
+  assert.equal(productWithAdditionalImage.images.length, 2);
+  assert.equal(productWithAdditionalImage.images[0].image_path, productsList.data[0].image);
+  const additionalImage = productWithAdditionalImage.images.find((image) => image.image_path !== productsList.data[0].image);
+  assert.ok(additionalImage?.image_path.startsWith('/uploads/'));
+  uploadedFiles.add(additionalImage.image_path);
 
   const galleryCreated = await request('/api/gallery', { method: 'POST', form: imageForm({ title: 'Integration gallery image', category: 'Test' }) });
   ids.gallery.push(galleryCreated.id);
@@ -299,10 +319,14 @@ test('public APIs, admin CRUD, enquiries, uploads, and auth work with MySQL', as
   assert.equal((await request('/api/banners/admin/list')).success, true);
   await request(`/api/banners/${bannerCreated.id}`, { method: 'PUT', body: { title: 'Updated integration banner' } });
 
-  const pageCreated = await request('/api/pages', { method: 'POST', body: { title: 'Integration page', slug: `integration-page-${Date.now()}` } });
+  const pageSlug = `integration-page-${Date.now()}`;
+  const pageCreated = await request('/api/pages', { method: 'POST', body: { title: 'Integration page', slug: pageSlug, description: 'Original page copy' } });
   ids.pages.push(pageCreated.id);
   assert.equal((await request('/api/pages/', { auth: false })).success, true);
-  await request(`/api/pages/${pageCreated.id}`, { method: 'PUT', body: { heading: 'Updated page heading' } });
+  await request(`/api/pages/${pageCreated.id}`, { method: 'PUT', body: { heading: 'Updated page heading', description: 'Updated page copy' } });
+  const publicPage = await request(`/api/pages/${pageSlug}`, { auth: false });
+  assert.equal(publicPage.data.heading, 'Updated page heading');
+  assert.equal(publicPage.data.description, 'Updated page copy');
   assert.equal((await request('/api/pages/admin/list')).success, true);
   const sectionCreated = await request(`/api/pages/${pageCreated.id}/sections`, {
     method: 'POST',
@@ -374,4 +398,91 @@ test('public APIs, admin CRUD, enquiries, uploads, and auth work with MySQL', as
   adminPassword = newPassword;
   const relogin = await request('/api/admin/login', { method: 'POST', auth: false, body: { email: adminEmail, password: adminPassword } });
   token = relogin.token;
+});
+
+test('saving the home page persists exact hero copy and the public page endpoint returns it', async () => {
+  if (!token) {
+    const login = await request('/api/admin/login', {
+      method: 'POST',
+      auth: false,
+      body: { email: adminEmail, password: adminPassword },
+    });
+    token = login.token;
+  }
+  const originalRows = await query('SELECT id, title, heading, description, is_active FROM pages WHERE slug = ? LIMIT 1', ['home']);
+  const original = originalRows[0];
+  assert.ok(original, 'the seeded home page must exist');
+  const marker = `SYNC-${Date.now()}`;
+  const title = `${marker} title`;
+  const heading = `${marker} heading`;
+  const description = `${marker} description`;
+
+  try {
+    await request(`/api/pages/${original.id}`, { method: 'PUT', body: { title, heading, description, is_active: true } });
+    const storedRows = await query('SELECT title, heading, description FROM pages WHERE id = ?', [original.id]);
+    assert.deepEqual(storedRows[0], { title, heading, description });
+    const publicPage = await request('/api/pages/home', { auth: false });
+    assert.equal(publicPage.data.title, title);
+    assert.equal(publicPage.data.page_title, title);
+    assert.equal(publicPage.data.heading, heading);
+    assert.equal(publicPage.data.description, description);
+    assert.equal(publicPage.data.content, description);
+  } finally {
+    await query(
+      'UPDATE pages SET title = ?, heading = ?, description = ?, is_active = ? WHERE id = ?',
+      [original.title, original.heading, original.description, original.is_active, original.id],
+    );
+  }
+});
+
+test('business settings persist through MySQL and the public settings endpoint', async () => {
+  if (!token) {
+    const login = await request('/api/admin/login', { method: 'POST', auth: false, body: { email: adminEmail, password: adminPassword } });
+    token = login.token;
+  }
+  const keys = ['name', 'phone', 'email', 'address', 'phoneDigits', 'hours', 'mapsUrl', 'businessHours', 'socialLinkedIn', 'footerDescription', 'footerNote'];
+  const originals = await query(`SELECT key_name, key_value, description FROM site_settings WHERE key_name IN (${keys.map(() => '?').join(', ')})`, keys);
+  const originalByKey = new Map(originals.map((row) => [row.key_name, row]));
+  const marker = `SYNC-${Date.now()}`;
+  const updates = {
+    name: `${marker} Electricals`,
+    footerDescription: `${marker} footer description`,
+    footerNote: `${marker} footer note`,
+    phone: '+91 99999 12345',
+    email: `sync-${Date.now()}@example.test`,
+    address: `${marker} Address`,
+    phoneDigits: '919999912345',
+    hours: 'Monday–Saturday: 8:00 AM – 8:00 PM · Sunday: CLOSED',
+    mapsUrl: 'https://maps.example.test/location',
+    businessHours: JSON.stringify(Array.from({ length: 7 }, (_, index) => ({ day: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'][index], open: '08:00', close: '20:00', closed: index === 6 }))),
+    socialLinkedIn: 'https://www.linkedin.com/company/example',
+  };
+  try {
+    for (const [key, value] of Object.entries(updates)) {
+      const existing = originalByKey.get(key);
+      await request(existing ? `/api/settings/${key}` : '/api/settings', {
+        method: existing ? 'PUT' : 'POST',
+        body: existing ? { key_value: value } : { key_name: key, key_value: value, description: `Integration ${key}` },
+      });
+    }
+    const stored = await query(`SELECT key_name, key_value FROM site_settings WHERE key_name IN (${keys.map(() => '?').join(', ')})`, keys);
+    const storedByKey = Object.fromEntries(stored.map((row) => [row.key_name, row.key_value]));
+    assert.equal(storedByKey.phone, updates.phone);
+    assert.equal(storedByKey.name, updates.name);
+    assert.equal(storedByKey.businessHours, updates.businessHours);
+    const publicSettings = await request('/api/settings', { auth: false });
+    assert.equal(publicSettings.business.phone, updates.phone);
+    assert.equal(publicSettings.business.name, updates.name);
+    assert.equal(publicSettings.business.footerDescription, updates.footerDescription);
+    assert.equal(publicSettings.business.footerNote, updates.footerNote);
+    assert.equal(publicSettings.business.email, updates.email);
+    assert.equal(publicSettings.business.mapsUrl, updates.mapsUrl);
+    assert.equal(publicSettings.business.socialLinkedIn, updates.socialLinkedIn);
+  } finally {
+    for (const key of keys) {
+      const original = originalByKey.get(key);
+      if (original) await query('UPDATE site_settings SET key_value = ?, description = ? WHERE key_name = ?', [original.key_value, original.description, key]);
+      else await query('DELETE FROM site_settings WHERE key_name = ?', [key]);
+    }
+  }
 });

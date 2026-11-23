@@ -2,8 +2,8 @@ import { NavLink } from "react-router-dom";
 import { CircleHelp, Grid3X3, Home, Images, Sparkles, UserRound } from "lucide-react";
 import { NAV_LINKS } from "../../utils/constants.js";
 import { useLanguage } from "../../context/LanguageContext.jsx";
-import logo from "../../assets/images/jay-gurudev-electricals-logo.png";
-import { BUSINESS_NAME } from "../../utils/branding.js";
+import { useSiteData } from "../../context/SiteDataContext.jsx";
+import logo from "../../assets/images/jay-gurudevv-logo.jpg";
 
 const navIcons = {
   "/": Home,
@@ -17,11 +17,12 @@ const navIcons = {
 
 export default function MobileMenu({ open, onClose }) {
   const { t } = useLanguage();
+  const { business } = useSiteData();
   if (!open) return null;
   return (
     <nav className="mobile-menu" aria-label={t("Mobile navigation")}>
       <div className="mobile-menu-brand">
-        <img className="brand-logo" src={logo} alt={BUSINESS_NAME} />
+        <img className="brand-logo" src={logo} alt={business.name} />
       </div>
       {NAV_LINKS.map((link) => {
         const Icon = navIcons[link.to];

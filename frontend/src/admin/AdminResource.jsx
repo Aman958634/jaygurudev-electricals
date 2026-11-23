@@ -16,7 +16,7 @@ function displayValue(value, key) {
 }
 
 function additionalSpecifications(specifications) {
-  return (Array.isArray(specifications) ? specifications : []).filter(({ name }) => !/^(?:model(?:\s*(?:number|no\.?)?)?|capacity(?:\s*unit)?|unit|size(?:\s*\/\s*(?:specification|rating))?|rating|packing(?:\s*\/\s*unit)?|unit\s*packing)$/i.test(String(name || "")));
+  return (Array.isArray(specifications) ? specifications : []).filter(({ name }) => !/^(?:model(?:\s*(?:number|no\.?)?)?|capacity(?:\s*unit)?|unit|size(?:\s*\/\s*(?:specification|rating))?|(?:electrical\s*)?rating|packing(?:\s*\/\s*unit)?|unit\s*packing)$/i.test(String(name || "")));
 }
 
 export default function AdminResource({ config, resource, token, onChanged }) {
@@ -90,6 +90,7 @@ export default function AdminResource({ config, resource, token, onChanged }) {
     setNotice("");
     const form = new FormData(event.currentTarget);
     const payload = new FormData();
+    const hasFileFields = config.fields.some((field) => field.type === "file");
     for (const field of config.fields) {
       if (field.type === "file") {
         const selectedFiles = form.getAll(field.name).filter((value) => value instanceof File && value.size > 0);
@@ -101,7 +102,7 @@ export default function AdminResource({ config, resource, token, onChanged }) {
         continue;
       }
       const value = form.get(field.name);
-      if (["model", "capacity", "capacity_unit", "size_rating", "packing"].includes(field.name)) {
+      if (["model", "capacity", "capacity_unit", "size", "rating", "packing"].includes(field.name)) {
         payload.append(field.name, value || "");
         continue;
       }
@@ -132,7 +133,10 @@ export default function AdminResource({ config, resource, token, onChanged }) {
     try {
       const isEditing = Boolean(editing?.id);
       const path = isEditing ? `${config.endpoint}/${editing.id}` : config.endpoint;
-      await adminRequest(token, path, { method: isEditing ? "PUT" : "POST", body: payload });
+      // Page copy has no upload field. Sending it as multipart leaves req.body
+      // empty because the pages API intentionally accepts JSON only.
+      const body = hasFileFields ? payload : JSON.stringify(Object.fromEntries(payload.entries()));
+      await adminRequest(token, path, { method: isEditing ? "PUT" : "POST", body });
       setEditing(null);
       setFilePreviews({});
       setNotice(`${singularTitle} saved.`);

@@ -2,7 +2,8 @@ const PRESENTATION_SPECS = {
   model: { pattern: /^model(?:\s*(?:number|no\.?))?$/i },
   capacity: { pattern: /^capacity$/i },
   capacity_unit: { pattern: /^(?:capacity\s*unit|unit)$/i },
-  size_rating: { pattern: /^(?:size\s*\/\s*rating|size\s*\/\s*specification|rating|size)$/i },
+  size: { pattern: /^(?:size|size\s*\/\s*(?:rating|specification))$/i },
+  rating: { pattern: /^(?:electrical\s*)?rating$/i },
   packing: { pattern: /^(?:packing|packing\s*\/\s*unit|unit\s*packing)$/i },
 };
 
@@ -16,7 +17,8 @@ export function getProductPresentationFields(product, specifications = []) {
     model: String(product.model || product.model_number || valueFor(specifications, PRESENTATION_SPECS.model.pattern) || '').trim(),
     capacity: valueFor(specifications, PRESENTATION_SPECS.capacity.pattern),
     capacity_unit: valueFor(specifications, PRESENTATION_SPECS.capacity_unit.pattern),
-    size_rating: String(product.size || valueFor(specifications, PRESENTATION_SPECS.size_rating.pattern) || '').trim(),
+    size: String(product.size || valueFor(specifications, PRESENTATION_SPECS.size.pattern) || '').trim(),
+    rating: valueFor(specifications, PRESENTATION_SPECS.rating.pattern),
     packing: valueFor(specifications, PRESENTATION_SPECS.packing.pattern),
   };
 }
@@ -26,19 +28,24 @@ export function isPresentationSpecification(name) {
 }
 
 export function mergePresentationSpecifications(specifications, payload) {
-  const merged = (Array.isArray(specifications) ? specifications : [])
-    .filter((specification) => specification && specification.name && specification.value)
-    .filter((specification) => !isPresentationSpecification(specification.name));
-  [
+  const fields = [
     ['model', 'Model'],
     ['capacity', 'Capacity'],
     ['capacity_unit', 'Capacity unit'],
-    ['size_rating', 'Size / Rating'],
+    ['size', null],
+    ['rating', 'Electrical rating'],
     ['packing', 'Packing'],
-  ].forEach(([key, name]) => {
+  ];
+  const merged = (Array.isArray(specifications) ? specifications : [])
+    .filter((specification) => specification && specification.name && specification.value)
+    .filter((specification) => {
+      const field = fields.find(([key]) => PRESENTATION_SPECS[key].pattern.test(String(specification.name)));
+      return !field || payload[field[0]] === undefined;
+    });
+  fields.forEach(([key, name]) => {
     if (payload[key] === undefined) return;
     const value = String(payload[key] || '').trim();
-    if (value) merged.push({ name, value });
+    if (name && value) merged.push({ name, value });
   });
   return merged;
 }

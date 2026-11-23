@@ -14,7 +14,7 @@ export function selectHomepageProducts(products, limit = 4) {
   const priorityProducts = activeProducts.filter(isPriorityStockProduct);
   const featuredProducts = activeProducts.filter((product) => isEnabled(product.is_featured));
   return [...new Map(
-    [...priorityProducts, ...featuredProducts, ...activeProducts]
+    [...featuredProducts, ...priorityProducts, ...activeProducts]
       .map((product) => [String(product.id), product]),
   ).values()].slice(0, limit);
 }
@@ -38,14 +38,16 @@ export function getProductCardSpecifications(product) {
   const model = getProductField(product, specifications, "model", /^model(?:\s*(?:number|no\.?))?$/i);
   const capacity = getProductField(product, specifications, "capacity", /^capacity$/i);
   const capacityUnit = getProductField(product, specifications, "capacity_unit", /^(?:capacity\s*unit|unit)$/i);
+  const rating = getProductField(product, specifications, "rating", /^(?:electrical\s*)?rating$/i);
   const packing = getProductField(product, specifications, "packing", /^(?:packing|packing\s*\/\s*unit|unit\s*packing)$/i);
   const poleConfigurations = getPoleConfigurations(product);
   const details = [];
 
   if (model) details.push({ name: "Model", value: model });
   if (capacity) details.push({ name: "Capacity", value: [capacity, capacityUnit].filter(Boolean).join(" ") });
-  const size = displayableValue(product.size || product.size_rating);
-  if (size) details.push({ name: "Size / Rating", value: size });
+  const size = displayableValue(product.size);
+  if (size) details.push({ name: "Size", value: size });
+  if (rating) details.push({ name: "Electrical rating", value: rating });
   if (packing) details.push({ name: "Packing", value: packing });
   if (poleConfigurations.length) {
     details.push({ name: "Available pole configurations", value: poleConfigurations.join(" / ") });
@@ -58,7 +60,8 @@ export function getProductCardSpecifications(product) {
     if (/^model(?:\s*(?:number|no\.?)?)?$/i.test(name) && value === model) continue;
     if (/^capacity(?:\s*unit)?$/i.test(name)) continue;
     if (/^(?:packing|packing\s*\/\s*unit|unit\s*packing)$/i.test(name) && value === packing) continue;
-    if (/^(?:size(?:\s*\/\s*(?:specification|rating))?|rating)$/i.test(name) && size.toLowerCase() === value.toLowerCase()) continue;
+    if (/^size(?:\s*\/\s*(?:specification|rating))?$/i.test(name) && size.toLowerCase() === value.toLowerCase()) continue;
+    if (/^(?:electrical\s*)?rating$/i.test(name) && value === rating) continue;
     if (/^pole configuration$/i.test(name) && poleConfigurations.length) {
       const options = value.split(/[\/,|]/).map((option) => option.trim().toUpperCase());
       if (options.join("|") === poleConfigurations.join("|")) continue;
@@ -76,11 +79,13 @@ export function getProductDetailSpecifications(product) {
   const model = getProductField(product, specifications, "model", /^model(?:\s*(?:number|no\.?))?$/i);
   const capacity = getProductField(product, specifications, "capacity", /^capacity$/i);
   const capacityUnit = getProductField(product, specifications, "capacity_unit", /^(?:capacity\s*unit|unit)$/i);
+  const rating = getProductField(product, specifications, "rating", /^(?:electrical\s*)?rating$/i);
   const packing = getProductField(product, specifications, "packing", /^(?:packing|packing\s*\/\s*unit|unit\s*packing)$/i);
-  const size = displayableValue(product.size || product.size_rating);
+  const size = displayableValue(product.size);
   if (model) rows.push({ key: "model", name: "Model", value: model });
   if (capacity) rows.push({ key: "capacity", name: "Capacity", value: [capacity, capacityUnit].filter(Boolean).join(" ") });
-  if (size) rows.push({ key: "size", name: "Size / Rating", value: size });
+  if (size) rows.push({ key: "size", name: "Size", value: size });
+  if (rating) rows.push({ key: "rating", name: "Electrical rating", value: rating });
   if (packing) rows.push({ key: "packing", name: "Packing", value: packing });
 
   specifications.forEach((specification, index) => {
@@ -90,7 +95,8 @@ export function getProductDetailSpecifications(product) {
     if (/^model(?:\s*(?:number|no\.?)?)?$/i.test(name) && value === model) return;
     if (/^capacity(?:\s*unit)?$/i.test(name)) return;
     if (/^(?:packing|packing\s*\/\s*unit|unit\s*packing)$/i.test(name) && value === packing) return;
-    if (/^(?:size(?:\s*\/\s*(?:specification|rating))?|rating)$/i.test(name) && size.toLowerCase() === value.toLowerCase()) return;
+    if (/^size(?:\s*\/\s*(?:specification|rating))?$/i.test(name) && size.toLowerCase() === value.toLowerCase()) return;
+    if (/^(?:electrical\s*)?rating$/i.test(name) && value === rating) return;
     rows.push({ key: specification.id || `${name}-${index}`, name, value });
   });
 

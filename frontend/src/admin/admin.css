@@ -717,6 +717,19 @@
   accent-color: var(--admin-accent);
 }
 
+.admin-hours-row {
+  display: grid;
+  grid-column: 1 / -1;
+  grid-template-columns: minmax(90px, 1fr) auto minmax(100px, 1fr) auto minmax(100px, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-hours-row label { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+.admin-hours-row input[type="checkbox"] { width: 16px; min-height: 16px; }
+.admin-hours-row input[type="time"] { min-width: 0; }
+
 @media (max-width: 760px) {
   .admin-settings-group { grid-template-columns: 1fr; }
+  .admin-hours-row { grid-template-columns: 1fr 1fr; }
 }

@@ -9,6 +9,8 @@ import {
 import { BUSINESS, SHOP_ADDRESS, SHOP_MAPS_URL } from "../src/utils/constants.js";
 import { getGoogleMapsAddressSearchUrl } from "../src/utils/maps.js";
 import { getProductEnquiryMessage, getRetailEnquiryMessage, getWhatsAppUrl } from "../src/utils/whatsapp.js";
+import { getHeroContent } from "../src/utils/pageContent.js";
+import { formatBusinessHours, parseBusinessHours, phoneDigits } from "../src/utils/businessSettings.js";
 
 test("homepage selection prefers active featured products, fills from active stock, and ignores inactive records", () => {
   const products = [
@@ -42,18 +44,19 @@ test("homepage selection returns exactly four unique active products when four o
   const selected = selectHomepageProducts(products);
   assert.equal(selected.length, 4);
   assert.equal(new Set(selected.map((product) => product.id)).size, 4);
-  assert.deepEqual(selected.map((product) => product.id), [3, 2, 1, 4]);
+  assert.deepEqual(selected.map((product) => product.id), [2, 3, 1, 4]);
 });
 
 test("product card specifications show existing model, capacity, size, packing and pole data only", () => {
   const specifications = getProductCardSpecifications({
     name: "MCB",
     model: "C32",
-    size_rating: "C curve",
+    size: "20 mm",
     specifications: [
       { name: "Model number", value: "C32" },
       { name: "Capacity", value: "32" },
       { name: "Capacity unit", value: "A" },
+      { name: "Electrical rating", value: "C curve" },
       { name: "Packing", value: "10 pcs" },
       { name: "Pole configuration", value: "SP / DP / TP" },
     ],
@@ -62,13 +65,14 @@ test("product card specifications show existing model, capacity, size, packing a
   assert.deepEqual(specifications, [
     { name: "Model", value: "C32" },
     { name: "Capacity", value: "32 A" },
-    { name: "Size / Rating", value: "C curve" },
+    { name: "Size", value: "20 mm" },
+    { name: "Electrical rating", value: "C curve" },
     { name: "Packing", value: "10 pcs" },
     { name: "Available pole configurations", value: "SP / DP / TP" },
   ]);
 });
 
-test("priority catalogue products are placed before regular homepage products", () => {
+test("explicitly featured catalogue products take precedence over priority fallbacks", () => {
   const products = [
     { id: 1, is_active: 1, name: "Other product", brand: "Other", is_featured: 1 },
     { id: 2, is_active: 1, name: "FR Wire", brand: "Polycab", category: "Wires & Cables" },
@@ -77,7 +81,7 @@ test("priority catalogue products are placed before regular homepage products", 
     { id: 5, is_active: 1, name: "Gharghanti", brand: "Guruttech" },
   ];
 
-  assert.deepEqual(selectHomepageProducts(products).map((product) => product.id), [2, 4, 5, 1]);
+  assert.deepEqual(selectHomepageProducts(products).map((product) => product.id), [1, 2, 4, 5]);
 });
 
 test("cards do not present an SKU as a model number", () => {
@@ -87,7 +91,7 @@ test("cards do not present an SKU as a model number", () => {
     size: "1200mm",
     specifications: [{ name: "Size", value: "1200mm" }],
   }), [
-    { name: "Size / Rating", value: "1200mm" },
+    { name: "Size", value: "1200mm" },
   ]);
 });
 
@@ -104,7 +108,7 @@ test("detail specifications include only stored values and omit empty fields", (
   }), [
     { key: "model", name: "Model", value: "C16" },
     { key: "capacity", name: "Capacity", value: "16 A" },
-    { key: "size", name: "Size / Rating", value: "6A to 63A" },
+    { key: "size", name: "Size", value: "6A to 63A" },
   ]);
 });
 
@@ -124,7 +128,7 @@ test("refrigerator and washing-machine capacity units are displayed only when st
 
 test("product WhatsApp enquiries identify the actual stored model and specifications", () => {
   const message = getProductEnquiryMessage({
-    name: "Refrigerator", brand: "Samsung", model: "RT28", capacity: "253", capacity_unit: "L", size_rating: "Double door",
+    name: "Refrigerator", brand: "Samsung", model: "RT28", capacity: "253", capacity_unit: "L", size: "Double door",
   }, BUSINESS);
   assert.match(message, /Brand: Samsung/);
   assert.match(message, /Model: RT28/);
@@ -175,4 +179,57 @@ test("approved English, Gujarati and Hindi font families are configured", () => 
   assert.match(css, /--font-body: "Inter"/);
   assert.match(css, /html:lang\(gu\)/);
   assert.match(css, /html:lang\(hi\)/);
+});
+
+test("page-content admin saves JSON when no upload field is configured", () => {
+  const editor = fs.readFileSync(new URL("../src/admin/AdminResource.jsx", import.meta.url), "utf8");
+  assert.match(editor, /const hasFileFields = config\.fields\.some/);
+  assert.match(editor, /hasFileFields \? payload : JSON\.stringify\(Object\.fromEntries\(payload\.entries\(\)\)\)/);
+});
+
+test("hero content preserves the exact saved page title, heading and description", () => {
+  const saved = {
+    page_title: "SYNC TITLE 20261123",
+    heading: "SYNC HEADING 20261123",
+    content: "SYNC DESCRIPTION 20261123",
+  };
+  assert.deepEqual(getHeroContent(saved), {
+    title: saved.page_title,
+    heading: saved.heading,
+    description: saved.content,
+  });
+  const hero = fs.readFileSync(new URL("../src/components/home/Hero.jsx", import.meta.url), "utf8");
+  assert.match(hero, /homePage\.data/);
+  assert.match(hero, /getHeroContent\(savedHomePage\)/);
+  assert.doesNotMatch(hero, /normalizeBusinessCopy/);
+});
+
+test("business-hours settings preserve Sunday closed and format public hours", () => {
+  const schedule = parseBusinessHours(JSON.stringify([
+    { day: "Monday", open: "08:00", close: "20:00", closed: false },
+    { day: "Tuesday", open: "08:00", close: "20:00", closed: false },
+    { day: "Wednesday", open: "08:00", close: "20:00", closed: false },
+    { day: "Thursday", open: "08:00", close: "20:00", closed: false },
+    { day: "Friday", open: "08:00", close: "20:00", closed: false },
+    { day: "Saturday", open: "08:00", close: "20:00", closed: false },
+    { day: "Sunday", open: "08:00", close: "20:00", closed: true },
+  ]));
+  assert.match(formatBusinessHours(schedule), /Sunday: CLOSED/);
+  const legacySchedule = parseBusinessHours(undefined, "Monday-Saturday: 9:30 AM - 7:15 PM | Sunday: CLOSED");
+  assert.equal(legacySchedule[0].open, "09:30");
+  assert.equal(legacySchedule[5].close, "19:15");
+  assert.equal(legacySchedule[6].closed, true);
+  assert.equal(phoneDigits("+91 99744 91814"), "919974491814");
+});
+
+test("website settings is a direct, mobile-safe admin destination with all required sections", () => {
+  const panel = fs.readFileSync(new URL("../src/admin/AdminPanel.jsx", import.meta.url), "utf8");
+  const settings = fs.readFileSync(new URL("../src/admin/AdminWebsiteSettings.jsx", import.meta.url), "utf8");
+  assert.match(panel, /\{ id: "settings", label: "Website Settings", icon: Settings \}/);
+  assert.match(panel, /activeSection === "settings" && <AdminWebsiteSettings/);
+  assert.match(panel, /setMobileNavOpen\(false\)/);
+  assert.doesNotMatch(panel, /admin-content-tabs/);
+  ["Business information", "Contact details", "Opening hours", "Google Maps & location", "Social media", "Footer information"].forEach((section) => {
+    assert.match(settings, new RegExp(section));
+  });
 });

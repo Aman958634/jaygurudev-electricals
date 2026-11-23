@@ -5,8 +5,8 @@ import { NAV_LINKS } from "../../utils/constants.js";
 import MobileMenu from "./MobileMenu.jsx";
 import { useLanguage } from "../../context/LanguageContext.jsx";
 import { useEnquiry } from "../../context/EnquiryContext.jsx";
-import logo from "../../assets/images/jay-gurudev-electricals-logo.png";
-import { BUSINESS_NAME } from "../../utils/branding.js";
+import logo from "../../assets/images/jay-gurudevv-logo.jpg";
+import { useSiteData } from "../../context/SiteDataContext.jsx";
 
 const navIcons = {
   "/": Home,
@@ -24,6 +24,7 @@ export default function Navbar() {
   const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
   const languageMenuRef = useRef(null);
   const { language, setLanguage, t } = useLanguage();
+  const { business } = useSiteData();
   const { enquiryItems, openEnquiryList } = useEnquiry();
   const navigate = useNavigate();
   const languageOptions = [
@@ -51,8 +52,8 @@ export default function Navbar() {
   return (
     <header className="site-header">
       <div className="container navbar">
-        <Link className="brand-lockup" to="/" aria-label={t(`${BUSINESS_NAME} home`)}>
-          <img className="brand-logo" src={logo} alt={BUSINESS_NAME} />
+        <Link className="brand-lockup" to="/" aria-label={t(`${business.name} home`)}>
+          <img className="brand-logo" src={logo} alt={business.name} />
         </Link>
         <nav className="desktop-nav" aria-label={t("Main navigation")}>
           {NAV_LINKS.map((link) => {
