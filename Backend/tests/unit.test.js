@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import slugify from '../utils/slugify.js';
 import { mergePresentationSpecifications, toFrontendProduct } from '../utils/productResponse.js';
 import { productInsertValues, productNewestOrder } from '../utils/productOrdering.js';
+import { backendBindHost, trustProxyHops } from '../utils/networkSecurity.js';
 
 test('slugify normalizes readable category and product names', () => {
   assert.equal(slugify('Switches & Sockets'), 'switches-and-sockets');
@@ -62,4 +63,12 @@ test('product SQL fallback does not reference display_order when an older schema
   assert.equal(insert.values.includes(42), false);
   assert.match(productNewestOrder(true), /p\.display_order ASC/);
   assert.equal(productInsertValues(payload, true).columns.includes('display_order'), true);
+});
+
+test('production proxy settings trust one Nginx hop and bind the backend to loopback', () => {
+  assert.equal(trustProxyHops({ NODE_ENV: 'production' }), 1);
+  assert.equal(trustProxyHops({ NODE_ENV: 'production', TRUST_PROXY_HOPS: '1' }), 1);
+  assert.equal(backendBindHost({ NODE_ENV: 'production' }), '127.0.0.1');
+  assert.equal(backendBindHost({ NODE_ENV: 'development' }), undefined);
+  assert.throws(() => trustProxyHops({ TRUST_PROXY_HOPS: 'not-a-hop-count' }), /TRUST_PROXY_HOPS/);
 });

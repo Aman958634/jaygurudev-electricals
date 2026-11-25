@@ -7,6 +7,7 @@ import { unlink } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import pool, { query } from '../config/db.js';
 
@@ -18,6 +19,7 @@ let adminPassword = randomBytes(24).toString('base64url');
 let serverProcess;
 let baseUrl;
 let token;
+let serverOutput = '';
 const ids = { products: [], categories: [], brands: [], enquiries: [], gallery: [], banners: [], pages: [], settings: [] };
 const uploadedFiles = new Set();
 
@@ -34,6 +36,9 @@ async function findPort() {
 
 async function waitForHealth() {
   for (let attempt = 0; attempt < 50; attempt += 1) {
+    if (serverProcess?.exitCode !== null && serverProcess?.exitCode !== undefined) {
+      throw new Error(`Backend server exited before becoming ready: ${serverOutput}`);
+    }
     try {
       const response = await fetch(`${baseUrl}/api/health`);
       if (response.ok) return;
@@ -44,16 +49,23 @@ async function waitForHealth() {
   throw new Error('Backend server did not become ready.');
 }
 
+function startBackend(port) {
+  serverOutput = '';
+  serverProcess = spawn(process.execPath, ['server.js'], {
+    cwd: backendDirectory,
+    env: { ...process.env, PORT: String(port), JWT_SECRET: process.env.JWT_SECRET, TRUST_PROXY_HOPS: '1' },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
+  serverProcess.stdout.on('data', (chunk) => { serverOutput += chunk; });
+  serverProcess.stderr.on('data', (chunk) => { serverOutput += chunk; });
+}
+
 async function restartBackend() {
   const previousServer = serverProcess;
   const stopped = new Promise((resolve) => previousServer.once('exit', resolve));
   previousServer.kill();
   await stopped;
-  serverProcess = spawn(process.execPath, ['server.js'], {
-    cwd: backendDirectory,
-    env: { ...process.env, PORT: new URL(baseUrl).port, JWT_SECRET: process.env.JWT_SECRET },
-    stdio: 'ignore',
-  });
+  startBackend(new URL(baseUrl).port);
   await waitForHealth();
 }
 
@@ -96,11 +108,7 @@ before(async () => {
 
   const port = await findPort();
   baseUrl = `http://127.0.0.1:${port}`;
-  serverProcess = spawn(process.execPath, ['server.js'], {
-    cwd: backendDirectory,
-    env: { ...process.env, PORT: String(port), JWT_SECRET: process.env.JWT_SECRET },
-    stdio: 'ignore',
-  });
+  startBackend(port);
   await waitForHealth();
 });
 
@@ -167,8 +175,9 @@ test('public APIs, admin CRUD, enquiries, uploads, and auth work with MySQL', as
   const brandCreated = await request('/api/brands', { method: 'POST', form: brandForm });
   ids.brands.push(brandCreated.id);
   const generatedBrandNames = [brandForm.get('name')];
+  const brandBatchMarker = `Integration batch brand ${Date.now()}`;
   for (let index = 1; index < 30; index += 1) {
-    const name = `Integration batch brand ${Date.now()} ${index}`;
+    const name = `${brandBatchMarker} ${index}`;
     const result = await request('/api/brands', {
       method: 'POST',
       body: { name, category: 'Integration test', display_order: index },
@@ -179,7 +188,7 @@ test('public APIs, admin CRUD, enquiries, uploads, and auth work with MySQL', as
   const adminBrands = await request('/api/brands/admin/list');
   assert.equal(adminBrands.data.filter((entry) => generatedBrandNames.includes(entry.name)).length, 30);
   assert.ok(adminBrands.data.find((entry) => entry.id === ids.brands[1]).display_order > 0);
-  const paginatedBrands = await request('/api/brands/admin/list?page=1&limit=10&search=Integration%20batch%20brand');
+  const paginatedBrands = await request(`/api/brands/admin/list?page=1&limit=10&search=${encodeURIComponent(brandBatchMarker)}`);
   assert.equal(paginatedBrands.data.length, 10);
   assert.equal(paginatedBrands.pagination.total, 29);
   assert.equal(paginatedBrands.pagination.totalPages, 3);
@@ -490,4 +499,36 @@ test('business settings persist through MySQL and the public settings endpoint',
       else await query('DELETE FROM site_settings WHERE key_name = ?', [key]);
     }
   }
+});
+
+test('verified administrators bypass public request counts while public, expired, and login requests remain protected', async () => {
+  if (!token) {
+    const login = await request('/api/admin/login', { method: 'POST', auth: false, body: { email: adminEmail, password: adminPassword } });
+    token = login.token;
+  }
+  const adminHeaders = { Authorization: `Bearer ${token}`, 'X-Forwarded-For': '198.51.100.44' };
+  const adminResponses = await Promise.all(Array.from({ length: 205 }, () => fetch(`${baseUrl}/api/admin/me`, { headers: adminHeaders })));
+  assert.equal(adminResponses.every((response) => response.status === 200), true);
+
+  const unauthorized = await fetch(`${baseUrl}/api/products/admin/list`, { headers: { 'X-Forwarded-For': '198.51.100.45' } });
+  assert.equal(unauthorized.status, 401);
+  const expiredToken = jwt.sign({ id: ids.admin, email: adminEmail, role: 'super_admin' }, process.env.JWT_SECRET, { expiresIn: -1 });
+  const expired = await fetch(`${baseUrl}/api/admin/me`, { headers: { Authorization: `Bearer ${expiredToken}`, 'X-Forwarded-For': '198.51.100.46' } });
+  assert.equal(expired.status, 401);
+
+  // This simulates Nginx forwarding a client address. With trust proxy set for
+  // exactly one trusted hop, this must not trigger ERR_ERL_UNEXPECTED_X_FORWARDED_FOR.
+  const forwardedAdmin = await fetch(`${baseUrl}/api/admin/me`, { headers: adminHeaders });
+  assert.equal(forwardedAdmin.status, 200);
+
+  const publicResponses = await Promise.all(Array.from({ length: 201 }, () => fetch(`${baseUrl}/api/health`, { headers: { 'X-Forwarded-For': '198.51.100.47' } })));
+  assert.equal(publicResponses.filter((response) => response.status === 200).length, 200);
+  assert.equal(publicResponses.filter((response) => response.status === 429).length, 1);
+
+  const badLoginHeaders = { 'Content-Type': 'application/json', 'X-Forwarded-For': '198.51.100.48' };
+  const failedLogins = await Promise.all(Array.from({ length: 11 }, () => fetch(`${baseUrl}/api/admin/login`, {
+    method: 'POST', headers: badLoginHeaders, body: JSON.stringify({ email: adminEmail, password: 'incorrect-password' }),
+  })));
+  assert.equal(failedLogins.filter((response) => response.status === 401).length, 10);
+  assert.equal(failedLogins.filter((response) => response.status === 429).length, 1);
 });

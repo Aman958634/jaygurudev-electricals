@@ -13,6 +13,7 @@ const resourcePaths = {
   settings: "/settings",
   statistics: "/statistics",
 };
+const allResourceKeys = Object.keys(resourcePaths);
 
 const SiteDataContext = createContext(null);
 
@@ -20,11 +21,11 @@ export function SiteDataProvider({ children }) {
   const [resources, setResources] = useState(() => Object.fromEntries(
     Object.keys(resourcePaths).map((key) => [key, { data: [], loading: true, error: null }]),
   ));
-  const [reloadKey, setReloadKey] = useState(0);
+  const [refreshRequest, setRefreshRequest] = useState(() => ({ revision: 0, keys: allResourceKeys }));
 
   useEffect(() => {
     const controller = new AbortController();
-    Object.entries(resourcePaths).forEach(([key, path]) => {
+    refreshRequest.keys.map((key) => [key, resourcePaths[key]]).forEach(([key, path]) => {
       setResources((current) => ({
         ...current,
         [key]: { ...current[key], loading: true, error: null },
@@ -51,11 +52,14 @@ export function SiteDataProvider({ children }) {
         });
     });
     return () => controller.abort();
-  }, [reloadKey]);
+  }, [refreshRequest]);
 
-  const refresh = useCallback((key) => {
-    if (key && !resourcePaths[key]) return;
-    setReloadKey((value) => value + 1);
+  const refresh = useCallback((keys) => {
+    const requestedKeys = keys === undefined
+      ? allResourceKeys
+      : (Array.isArray(keys) ? keys : [keys]).filter((key) => resourcePaths[key]);
+    if (!requestedKeys.length) return;
+    setRefreshRequest((current) => ({ revision: current.revision + 1, keys: [...new Set(requestedKeys)] }));
   }, []);
 
   const business = useMemo(() => {

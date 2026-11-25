@@ -160,7 +160,7 @@ export default function AdminPanel() {
   const activeItem = navigation.find((item) => item.id === activeSection) || navigation[0];
   const ActiveIcon = activeItem.icon;
   const navigate = (section) => { setActiveSection(section); setMobileNavOpen(false); };
-  const onChanged = () => refresh();
+  const onChanged = (resources) => refresh(resources);
 
   return (
     <div className={`admin-shell${sidebarCollapsed ? " admin-shell--collapsed" : ""}`}>
@@ -189,10 +189,10 @@ export default function AdminPanel() {
         </header>
         <main className="admin-main">
           {activeSection === "dashboard" && <AdminDashboard token={token} onNavigate={navigate} />}
-          {resourceConfigs[activeSection] && <AdminResource key={activeSection} resource={activeSection} config={resourceConfigs[activeSection]} token={token} onChanged={onChanged} />}
+          {resourceConfigs[activeSection] && <AdminResource key={activeSection} resource={activeSection} config={resourceConfigs[activeSection]} token={token} onChanged={() => onChanged(activeSection)} />}
           {activeSection === "enquiries" && <AdminEnquiries token={token} />}
-          {activeSection === "content" && <AdminResource config={resourceConfigs.pages} resource="pages" token={token} onChanged={onChanged} />}
-          {activeSection === "settings" && <AdminWebsiteSettings token={token} onChanged={onChanged} />}
+          {activeSection === "content" && <AdminResource config={resourceConfigs.pages} resource="pages" token={token} onChanged={() => onChanged(["pages", "homePage"])} />}
+          {activeSection === "settings" && <AdminWebsiteSettings token={token} onChanged={() => onChanged("settings")} />}
         </main>
       </div>
       {passwordOpen && <PasswordDialog token={token} onClose={() => setPasswordOpen(false)} />}

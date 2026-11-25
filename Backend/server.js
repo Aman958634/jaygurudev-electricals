@@ -19,14 +19,18 @@ import dashboardRoutes from './routes/dashboard.js';
 import bannerRoutes from './routes/banners.js';
 import statisticsRoutes from './routes/statistics.js';
 import errorHandler from './middleware/errorHandler.js';
+import { identifyAuthenticatedAdmin } from './middleware/auth.js';
+import { backendBindHost, trustProxyHops } from './utils/networkSecurity.js';
 
 dotenv.config();
 
 const app = express();
 const PORT = Number(process.env.PORT || 5000);
+const BIND_HOST = backendBindHost();
 const backendDirectory = path.dirname(fileURLToPath(import.meta.url));
 const pidFilePath = path.join(backendDirectory, '.backend-5000.pid');
 
+app.set('trust proxy', trustProxyHops());
 app.use(helmet({ crossOriginResourcePolicy: false }));
 const allowedOrigins = (process.env.CLIENT_ORIGIN || 'http://localhost:5173')
   .split(',')
@@ -51,9 +55,12 @@ const apiLimiter = rateLimit({
   max: 200,
   standardHeaders: true,
   legacyHeaders: false,
+  // req.admin is set only by a verified JWT plus active-admin database lookup.
+  // Invalid, expired, absent, or spoofed bearer tokens remain public-limited.
+  skip: (req) => Boolean(req.admin),
   message: { success: false, message: 'Too many requests. Please try again later.' },
 });
-app.use('/api', apiLimiter);
+app.use('/api', identifyAuthenticatedAdmin, apiLimiter);
 
 app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Jay GuruDev backend is running.' });
@@ -85,7 +92,7 @@ app.use((err, req, res, next) => {
 app.use(uploadErrorHandler);
 app.use(errorHandler);
 
-const server = app.listen(PORT);
+const server = BIND_HOST ? app.listen(PORT, BIND_HOST) : app.listen(PORT);
 
 server.on('listening', async () => {
   if (PORT === 5000) {
@@ -100,7 +107,7 @@ server.on('listening', async () => {
     }
   }
 
-  console.log(`Jay GuruDev backend listening on port ${PORT}`);
+  console.log(`Jay GuruDev backend listening on ${BIND_HOST || 'all local development interfaces'}:${PORT}`);
 });
 
 server.on('close', async () => {

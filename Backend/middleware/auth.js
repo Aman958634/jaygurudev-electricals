@@ -1,35 +1,58 @@
 import jwt from 'jsonwebtoken';
 import { queryOne } from '../config/db.js';
 
-export async function requireAuth(req, res, next) {
+function bearerToken(req) {
   const header = req.headers.authorization || '';
-  const token = header.startsWith('Bearer ') ? header.slice(7) : null;
+  return header.startsWith('Bearer ') ? header.slice(7) : null;
+}
 
-  if (!token) {
-    return res.status(401).json({ success: false, message: 'Authentication required.' });
-  }
+async function resolveAuthenticatedAdmin(req) {
+  if (req.adminAuthentication) return req.adminAuthentication;
 
-  const secret = process.env.JWT_SECRET;
-  if (!secret) {
-    return res.status(503).json({ success: false, message: 'Authentication is not configured.' });
-  }
+  req.adminAuthentication = (async () => {
+    const token = bearerToken(req);
+    if (!token) return { error: { status: 401, message: 'Authentication required.' } };
 
-  let decoded;
-  try {
-    decoded = jwt.verify(token, secret);
-  } catch (error) {
-    return res.status(401).json({ success: false, message: 'Invalid or expired token.' });
-  }
-  if (!decoded || typeof decoded !== 'object' || !Number.isInteger(decoded.id)) {
-    return res.status(401).json({ success: false, message: 'Invalid or expired token.' });
-  }
+    const secret = process.env.JWT_SECRET;
+    if (!secret) return { error: { status: 503, message: 'Authentication is not configured.' } };
 
-  try {
-    const admin = await queryOne('SELECT id, email, role FROM admins WHERE id = ? AND is_active = 1', [decoded.id]);
-    if (!admin) {
-      return res.status(401).json({ success: false, message: 'Admin account is inactive or unavailable.' });
+    let decoded;
+    try {
+      decoded = jwt.verify(token, secret);
+    } catch {
+      return { error: { status: 401, message: 'Invalid or expired token.' } };
+    }
+    if (!decoded || typeof decoded !== 'object' || !Number.isInteger(decoded.id)) {
+      return { error: { status: 401, message: 'Invalid or expired token.' } };
     }
 
+    const admin = await queryOne('SELECT id, email, role FROM admins WHERE id = ? AND is_active = 1', [decoded.id]);
+    if (!admin) return { error: { status: 401, message: 'Admin account is inactive or unavailable.' } };
+    req.admin = admin;
+    return { admin };
+  })();
+  return req.adminAuthentication;
+}
+
+// This never grants access itself. It only identifies an active database-backed
+// administrator so the public limiter can skip a request after verification.
+export async function identifyAuthenticatedAdmin(req, res, next) {
+  if (!bearerToken(req)) return next();
+  try {
+    await resolveAuthenticatedAdmin(req);
+    return next();
+  } catch (error) {
+    return next(error);
+  }
+}
+
+export async function requireAuth(req, res, next) {
+  if (!bearerToken(req)) {
+    return res.status(401).json({ success: false, message: 'Authentication required.' });
+  }
+  try {
+    const { admin, error } = await resolveAuthenticatedAdmin(req);
+    if (error) return res.status(error.status).json({ success: false, message: error.message });
     req.admin = admin;
     return next();
   } catch (error) {
