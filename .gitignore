@@ -9,3 +9,20 @@ node_modules/
 *.sql.gz
 
 frontend/dist/
+/Backend/private-imports/
+
+# Local Bulk Import diagnostics and generated catalogue artefacts
+/Backend/.tmp-fiana/
+/Backend/.ocr-cache/
+/Backend/eng.traineddata
+/frontend/.tsupgrader/
+/Backend/scripts/isolated-mariadb-test.ini
+/Backend/scripts/*mariadb*.ini
+*.pdf
+*.zip
+*.xlsx
+*.csv
+*.dump
+*.bak
+*.sqlite
+*.sqlite3

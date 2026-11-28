@@ -35,25 +35,31 @@ async function findPort() {
 }
 
 async function waitForHealth() {
-  for (let attempt = 0; attempt < 50; attempt += 1) {
+  let lastFailure = 'No connection attempt was made.';
+  // Canvas/PDF native modules can take longer than ten seconds to initialise
+  // on a cold Windows filesystem.  This is still a bounded local health poll
+  // and preserves the child stdout/stderr diagnostic on an actual failure.
+  for (let attempt = 0; attempt < 150; attempt += 1) {
     if (serverProcess?.exitCode !== null && serverProcess?.exitCode !== undefined) {
       throw new Error(`Backend server exited before becoming ready: ${serverOutput}`);
     }
     try {
       const response = await fetch(`${baseUrl}/api/health`);
       if (response.ok) return;
+      lastFailure = `HTTP ${response.status}: ${await response.text()}`;
     } catch (error) {
+      lastFailure = error.message;
       await new Promise((resolve) => setTimeout(resolve, 200));
     }
   }
-  throw new Error('Backend server did not become ready.');
+  throw new Error(`Backend server did not become ready. Last health result: ${lastFailure}. Child output: ${serverOutput || '(none)'}`);
 }
 
 function startBackend(port) {
   serverOutput = '';
   serverProcess = spawn(process.execPath, ['server.js'], {
     cwd: backendDirectory,
-    env: { ...process.env, PORT: String(port), JWT_SECRET: process.env.JWT_SECRET, TRUST_PROXY_HOPS: '1' },
+    env: { ...process.env, NODE_ENV: 'test', BIND_HOST: '127.0.0.1', PORT: String(port), JWT_SECRET: process.env.JWT_SECRET, TRUST_PROXY_HOPS: '1' },
     stdio: ['ignore', 'pipe', 'pipe'],
   });
   serverProcess.stdout.on('data', (chunk) => { serverOutput += chunk; });
@@ -424,8 +430,19 @@ test('saving the home page persists exact hero copy and the public page endpoint
     token = login.token;
   }
   const originalRows = await query('SELECT id, title, heading, description, is_active FROM pages WHERE slug = ? LIMIT 1', ['home']);
-  const original = originalRows[0];
-  assert.ok(original, 'the seeded home page must exist');
+  let original = originalRows[0];
+  let createdHomeForTest = false;
+  // The dedicated integration database is deliberately not seeded.  Create a
+  // minimal row only there and remove it in finally; a real home page is
+  // always restored rather than reseeded or overwritten.
+  if (!original) {
+    const created = await query(
+      'INSERT INTO pages (slug, title, heading, description, is_active) VALUES (?, ?, ?, ?, 1)',
+      ['home', 'Integration home title', 'Integration home heading', 'Integration home description'],
+    );
+    original = { id: created.insertId, title: 'Integration home title', heading: 'Integration home heading', description: 'Integration home description', is_active: 1 };
+    createdHomeForTest = true;
+  }
   const marker = `SYNC-${Date.now()}`;
   const title = `${marker} title`;
   const heading = `${marker} heading`;
@@ -442,7 +459,8 @@ test('saving the home page persists exact hero copy and the public page endpoint
     assert.equal(publicPage.data.description, description);
     assert.equal(publicPage.data.content, description);
   } finally {
-    await query(
+    if (createdHomeForTest) await query('DELETE FROM pages WHERE id = ?', [original.id]);
+    else await query(
       'UPDATE pages SET title = ?, heading = ?, description = ?, is_active = ? WHERE id = ?',
       [original.title, original.heading, original.description, original.is_active, original.id],
     );

@@ -18,6 +18,7 @@ import settingsRoutes from './routes/settings.js';
 import dashboardRoutes from './routes/dashboard.js';
 import bannerRoutes from './routes/banners.js';
 import statisticsRoutes from './routes/statistics.js';
+import productImportRoutes from './routes/productImport.js';
 import errorHandler from './middleware/errorHandler.js';
 import { identifyAuthenticatedAdmin } from './middleware/auth.js';
 import { backendBindHost, trustProxyHops } from './utils/networkSecurity.js';
@@ -66,6 +67,9 @@ app.get('/api/health', (req, res) => {
   res.json({ success: true, message: 'Jay GuruDev backend is running.' });
 });
 
+// Register multipart import endpoints before the generic admin router so no
+// future admin-level upload middleware can consume their file fields first.
+app.use('/api/admin/products/bulk-import', productImportRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/products', productRoutes);
 app.use('/api/categories', categoryRoutes);

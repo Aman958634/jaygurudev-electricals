@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ImagePlus, Pencil, Plus, Search, Trash2, X } from "lucide-react";
+import { ImagePlus, Pencil, Plus, Search, Trash2, Upload, X } from "lucide-react";
 import { resolveMediaUrl } from "../services/api.js";
 import { adminRequest } from "./adminApi.js";
 import { getImagePath } from "./adminResources.js";
@@ -19,7 +19,7 @@ function additionalSpecifications(specifications) {
   return (Array.isArray(specifications) ? specifications : []).filter(({ name }) => !/^(?:model(?:\s*(?:number|no\.?)?)?|capacity(?:\s*unit)?|unit|size(?:\s*\/\s*(?:specification|rating))?|(?:electrical\s*)?rating|packing(?:\s*\/\s*unit)?|unit\s*packing)$/i.test(String(name || "")));
 }
 
-export default function AdminResource({ config, resource, token, onChanged }) {
+export default function AdminResource({ config, resource, token, onChanged, onBulkImport }) {
   const singularTitle = config.title === "Categories" ? "Category" : config.title.replace(/s$/, "");
   const [rows, setRows] = useState([]);
   const [lookups, setLookups] = useState({ categories: [], brands: [] });
@@ -171,7 +171,7 @@ export default function AdminResource({ config, resource, token, onChanged }) {
     <section className="admin-page">
       <div className="admin-page-heading">
         <div><span className="admin-eyebrow">CONTENT MANAGEMENT</span><h1>{config.title}</h1><p>{config.description}</p></div>
-        <button className="admin-button admin-button--primary" onClick={() => openEditor({})}><Plus size={17} /> Add {singularTitle}</button>
+        <div className="admin-page-actions">{resource === "products" && <button className="admin-button admin-button--quiet" onClick={onBulkImport}><Upload size={17} /> Bulk Import</button>}<button className="admin-button admin-button--primary" onClick={() => openEditor({})}><Plus size={17} /> Add {singularTitle}</button></div>
       </div>
       {notice && <div className="admin-alert admin-alert--success">{notice}</div>}
       {error && <div className="admin-alert admin-alert--error" role="alert">{error}</div>}

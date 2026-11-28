@@ -6,7 +6,10 @@ import { fileURLToPath } from 'url';
 import { randomUUID } from 'crypto';
 
 const backendDirectory = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-export const uploadsDir = path.join(backendDirectory, 'uploads');
+// Production releases are commonly replaced atomically.  Keep uploaded media
+// outside the release directory when UPLOAD_STORAGE_ROOT is configured, while
+// preserving the existing in-repository location for local development.
+export const uploadsDir = path.resolve(process.env.UPLOAD_STORAGE_ROOT || path.join(backendDirectory, 'uploads'));
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
@@ -89,7 +92,12 @@ export async function validateImageContent(req, res, next) {
 
 export function uploadErrorHandler(error, req, res, next) {
   if (error instanceof multer.MulterError) {
-    return res.status(400).json({ success: false, message: error.message });
+    if (error.code === 'LIMIT_FILE_SIZE') return res.status(400).json({ success: false, message: 'Uploaded file exceeds the allowed size.' });
+    if (error.code === 'LIMIT_UNEXPECTED_FILE') {
+      const field = typeof error.field === 'string' && /^[A-Za-z0-9_-]{1,64}$/.test(error.field) ? error.field : 'unknown';
+      return res.status(400).json({ success: false, message: `Unexpected upload field: ${field}.` });
+    }
+    return res.status(400).json({ success: false, message: 'The upload could not be processed.' });
   }
   if (error.message?.startsWith('Only JPG')) {
     return res.status(400).json({ success: false, message: error.message });

@@ -12,6 +12,7 @@ import AdminEnquiries from "./AdminEnquiries.jsx";
 import AdminLogin from "./AdminLogin.jsx";
 import AdminResource from "./AdminResource.jsx";
 import AdminWebsiteSettings from "./AdminWebsiteSettings.jsx";
+import AdminProductImport from "./AdminProductImport.jsx";
 import { resourceConfigs } from "./adminResources.js";
 import "./admin.css";
 import { BUSINESS_NAME } from "../utils/branding.js";
@@ -93,6 +94,8 @@ export default function AdminPanel() {
   const [authLoading, setAuthLoading] = useState(Boolean(token));
   const [authNotice, setAuthNotice] = useState("");
   const [authError, setAuthError] = useState("");
+  const [productImportOpen, setProductImportOpen] = useState(false);
+  const [productImportVersion, setProductImportVersion] = useState(0);
 
   useEffect(() => {
     const onExpired = () => {
@@ -189,13 +192,14 @@ export default function AdminPanel() {
         </header>
         <main className="admin-main">
           {activeSection === "dashboard" && <AdminDashboard token={token} onNavigate={navigate} />}
-          {resourceConfigs[activeSection] && <AdminResource key={activeSection} resource={activeSection} config={resourceConfigs[activeSection]} token={token} onChanged={() => onChanged(activeSection)} />}
+          {resourceConfigs[activeSection] && <AdminResource key={`${activeSection}-${productImportVersion}`} resource={activeSection} config={resourceConfigs[activeSection]} token={token} onChanged={() => onChanged(activeSection)} onBulkImport={activeSection === "products" ? () => setProductImportOpen(true) : undefined} />}
           {activeSection === "enquiries" && <AdminEnquiries token={token} />}
           {activeSection === "content" && <AdminResource config={resourceConfigs.pages} resource="pages" token={token} onChanged={() => onChanged(["pages", "homePage"])} />}
           {activeSection === "settings" && <AdminWebsiteSettings token={token} onChanged={() => onChanged("settings")} />}
         </main>
       </div>
       {passwordOpen && <PasswordDialog token={token} onClose={() => setPasswordOpen(false)} />}
+      {productImportOpen && <AdminProductImport token={token} onClose={() => setProductImportOpen(false)} onImported={() => setProductImportVersion((version) => version + 1)} />}
     </div>
   );
 }
